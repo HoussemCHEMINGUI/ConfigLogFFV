@@ -1,0 +1,21 @@
+<!-- This model was created online using SPLOT's Feature Model Editor (http://www.splot-research.org) on mer., févr. 20, 2019 - 5:18 PM  -->
+<feature_model name="Hey">
+<meta>
+<data name="description">Helo</data>
+<data name="creator"></data>
+<data name="address"></data>
+<data name="email">djd@gm.com</data>
+<data name="phone"></data>
+<data name="website"></data>
+<data name="organization">Coucou</data>
+<data name="department"></data>
+<data name="date"></data>
+<data name="reference"></data>
+</meta>
+<feature_tree>
+:r jjs(_r)
+	:m Hello(_r_1)
+</feature_tree>
+<constraints>
+</constraints>
+</feature_model>

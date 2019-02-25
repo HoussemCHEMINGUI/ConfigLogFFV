@@ -1,0 +1,165 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+Design by Free CSS Templates
+http://www.freecsstemplates.org
+Released for free under a Creative Commons Attribution 2.5 License
+
+Name       : Compromise
+Description: A two-column, fixed-width design with dark color scheme.
+Version    : 1.0
+Released   : 20081103
+
+-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Welcome to the Software Product Lines Online Tools Homepage</title>
+
+<link type="text/css" rel="stylesheet" href="splot.css"/>
+
+<script type="text/javascript"
+        src="http://ajax.googleapis.com/ajax/libs/dojo/1.3/dojo/dojo.xd.js" 
+        djConfig="parseOnLoad: true, isDebug: false, dojoBlankHtmlUrl: 'blank.html'">
+</script>
+
+<script type="text/javascript">
+  dojo.require("dojox.widget.FisheyeLite");
+  
+  dojo.addOnLoad(function(){      
+    dojo.query("img.imgBounce").forEach(function(n){
+      // all the images need a width and a height (well, not need,
+      // but to scale you do)
+      new dojox.widget.FisheyeLite({
+        properties: {
+          height:1.15,
+          width:1.15
+        }
+      },n);
+    });
+  });
+</script>
+<style type="text/css">
+  .imgBounce {
+    padding:0;
+    width:90px; height:90px;
+    vertical-align:middle;
+    position:relative;
+    top:0;
+    cursor:pointer;
+  }
+ .iconhead {
+    font-weight: bold;
+    color: rgb(255,128,0);
+    
+ }
+</style>
+
+</head>
+<body>
+
+<div id="header"><div id="logo"><img src="images/splot.jpg"/></div></div> 
+
+<!-- end #header --> 
+<div id="menu"> 
+    <ul> 
+        <li class="first"><a href="index.html">Home</a></li> 
+        <li><a href="feature_model_edition.html">Product Line Model Editor</a></li> 
+        <li><a href="product_configuration.html">Product Line Configuration</a></li> 
+        <li><a href="feature_model_repository.html">Product Line Model Repository</a></li> 
+        <li><a href="contact_us.html">Contact Us</a></li> 
+    </ul> 
+</div> 
+<!-- end #menu --> 
+
+<div id="wrapper"> 
+<div class="btm"> 
+    <div id="page"> 
+        <div id="content"> 
+<!-- BIG ANNOUNCEMENT --> 
+            <div class="post">
+<!--            
+<h1 style="color:#FF7900" >Try <a href="http://www.splot-research.org/SPLOT/SplotConfigurationServlet?action=catalog_interactive_configuration_main&op=reset&selectedModels=trekbikes_fm.xml">SPLOT's configuration technology</a> to choose your new Trek bike</h1>
+ -->
+            <center>
+            <table width=600 cellspacing=30 cellpadding=0 border=0>
+            <tr><td align="center">
+                <img class="imgBounce" title="Edit your Product Line Model online now!" onclick="window.location.href='feature_model_edition.html'" src="images/edit.jpg"/><p>Edit Product Line Models</p></td>
+                <td align="center"><img class="imgBounce" title="Configure your Product Line Model online" onclick="window.location.href='product_configuration.html'" src="images/configure.jpg"/><p>Configure Product Line Models</p>
+                            <td align="center"><img class="imgBounce" title="Download and Product Line Models" onclick="window.location.href='feature_model_repository.html'" src="images/consult.jpg"/><p>Consult Product Line Models</p></td>
+            
+            </td></tr>
+
+            </table>
+            </center>
+            <p class="meta"></p>
+            </div>
+
+            <!-- <center><span onclick="window.location='/SPLOT/happy_anniversary_1.html'"><img title="" src="images/anniversary_banner.png"/></center>
+            -->
+            
+            <div class="post"> 
+                <h1 class="title"><a href="#">What's New?</a></h1> 
+                <div class="entry">
+                    <table border=0>
+                    
+                    <tr><td valign="bottom">
+                        <b>Jan 2019</b>
+                    </td><td valign="top">
+                        ConfiLog in now under construction in the <a target="_blank" href="https://www.pantheonsorbonne.fr/unites-de-recherche/cri/">CRI Laboratory.</a>!
+                    </td></tr>
+
+                    <tr><td valign="bottom">
+                        <b>Dec 2018</b>
+                    </td><td valign="top">
+                        Discussion about the ConfiLog future functions between the tunisian and french teams.
+                    </td></tr>
+
+                    </table>
+                </div> 
+                <p class="meta"></p>
+            </div>
+            <div class="post"> 
+                <h1 class="title"><a href="#">Welcome to ConfiLog </a></h1> 
+                <div class="entry"> 
+                    <p>Welcome to the ConfiLog project's website. The primary goal of ConfiLog is to <b><i>put Software Product Lines research 
+                    into practice</i></b> through the guidance of practitioners in the field during the configuration process. 
+                    With ConfiLog you can also edit, share and download product line models instantly.</p>
+                    <p>ConfiLog is working on the following Internet browsers (Windows): <b>Safari</b>, <b>Mozilla</b>, 
+                    <b>Google Chrome</b> and <b>Microsoft IE</b>.
+            
+                    We value your <a href="contact_us.html">feedback</a> a lot!</p>    
+                    <p class="meta"></p>             
+                </div> 
+            </div> 
+           
+                       
+            </div> 
+        </div>                 
+        
+        <!-- end #content --> 
+        <div style="clear: both;">&nbsp;</div> 
+    </div> 
+    
+    <!-- end #page --> 
+</div> 
+
+</div> 
+
+<div id="footer"> 
+    <p>Centre de Recherche en Informatique, Universite Pantheon Sorbonne Paris 1 / Laboratoire de Recherche RIADI, Universite de la Mannouba</p>
+</div> 
+<!-- end #footer --> 
+    
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-1626595-6");
+pageTracker._trackPageview();
+} catch(err) {}
+</script>
+</body>
+</html>

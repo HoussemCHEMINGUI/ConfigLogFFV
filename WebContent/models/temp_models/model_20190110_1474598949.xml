@@ -1,0 +1,35 @@
+<!-- This model was created online using SPLOT's Feature Model Editor (http://www.splot-research.org) on jeu., janv. 10, 2019 - 3:07 PM  -->
+<feature_model name="Aircraft PL">
+<meta>
+<data name="description">This is a short desc</data>
+<data name="creator">Houss chemi</data>
+<data name="address"></data>
+<data name="email">houss.chemingui</data>
+<data name="phone"></data>
+<data name="website"></data>
+<data name="organization">PAris 1</data>
+<data name="department"></data>
+<data name="date">Jan 2019</data>
+<data name="reference"></data>
+</meta>
+<feature_tree>
+:r Aircraft(_id_0)
+	:m Wing(_id_1)
+		:g (_id_2) [1,*] 
+			: High(_id_3)
+			: Shoulder(_id_4)
+			: Low(_id_5)
+	:o Engine(_id_6)
+		:g (_id_7) [1,1] 
+			: Jet(_id_8)
+			: Piston(_id_9)
+	:m Materials(_id_10)
+		:g (_id_11) [1,*] 
+			: Metal(_id_12)
+			: Wood(_id_13)
+			: Cloth(_id_14)
+			: Plastic(_id_15)
+</feature_tree>
+<constraints>
+</constraints>
+</feature_model>
