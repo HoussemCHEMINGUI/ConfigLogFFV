@@ -183,7 +183,7 @@ Released   : 20081103
 		parameters = '';
 		if (typeof parameter != 'undefined' && typeof value != 'undefined' ) {
 			var today = new Date();
-			var timeStamp = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+			var timeStamp = today.getUTCDate() +"/" + today.getUTCMonth() +"/" + today.getUTCFullYear() +" " + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds() + ":" + today.getMilliseconds();   
 			parameters = '&' + parameter + '=' + value + '&'+'timeStamp='+timeStamp;
 		}
 	
@@ -378,19 +378,24 @@ Released   : 20081103
 				
 				<div class="post"> 
 					<h1 class="title"><a href="#">${modelName} (${countFeatures} variants)</a></h1>
-</br></br> <center> 
-									<input class="selectedFeature" name="n1" id="para" onblur="myFunction()" type="text" value="Originator Name 1"  size="17"/>  &nbsp;&nbsp;
-											<input class="selectedFeature" name="n2" id="hj" onblur="myFunction()" type="text" value="Originator Name 2" size="17"/> &nbsp;&nbsp;
-										<input class="selectedFeature" name ="n3" id="hk" onblur="myFunction()" type="text" value="Originator Name 3" size="17"/> </br>
-		</center>
+</br></br>
+			<input class="selectedFeature" id="originatorName" type="text" value="Originator Name" size="17"/> &ensp;
 			</br>								 				
+
 <script>
 
-function myFunction() {
-var originatorName1;
-originatorName1 = document.getElementById('para').value;
+function exportCSV() {
+
+	var originatorName = document.getElementById('originatorName').value || '';
+
+	window.open(
+		'/SPLOT/SplotConfigurationServlet?action=export_configuration_csv&originatorName=' + originatorName,
+		'_blank'
+	);
 }
+
 </script>
+
 <p><table width=820 border=0>
 							<tr>
 							<td align=left valign=top>
@@ -434,7 +439,7 @@ originatorName1 = document.getElementById('para').value;
 											<span style="display:block;" id="configuration-done-element">
 												<span class="standardHighlight1">Done!</span>
 												(Export configuration: 
-												<a target="_new" href="/SPLOT/SplotConfigurationServlet?action=export_configuration_csv" >CSV file</a> |  
+												<a href="#" onclick="exportCSV()" >CSV file</a> |  
 												<a target="_new" href="/SPLOT/SplotConfigurationServlet?action=export_configuration_xml">XML</a>)
 											</span>
 											<span style="display:block;" id="auto-completion-element">
@@ -443,42 +448,27 @@ originatorName1 = document.getElementById('para').value;
 												<a title="Attempts to DESELECT all remaining features" href="javascript:updateConfigurationElements('completion','precedence','false')">Less Features</a> | 
 												<a title="Attempts to SELECT all remaining features" href="javascript:updateConfigurationElements('completion','precedence','true')">More Features</a> 
 											</span>
-										</span>
+											
+															</span>
 									</td></tr>
 								</table>	
 								
 								
 								
+					<table> 									<tr align=top><td align=center colspan=2><button class="standardHighlight1" type="button" onclick="loadXMLDoc()">Rapid Reco</button> <br> <p id="demo">Ready!</p></td><td align=center colspan=2><button class="standardHighlight1" type="button" onclick="loadXMLDocc()">Detailed Reco</button><br><p id="democ">Ready!</p></td><td align=center colspan=2><button class="standardHighlight1" type="button" onclick="loadXMLDoc()">Flexible Reco</button><br><p id="democ">Ready!</p></td></tr>
+					
+					 </table>
+						    
+						  
+															</td></tr>
+								
+
+
+
 								
 								
 								
-								<table class="standardTableStyle" id="confStepsTable" width="419">
-									<tr><td colspan='5' class="standardHighlight1">
-										<b>Recommendation Series</b> 
-									</td></tr>
-									
-									<tr>
-										<th>Rec</th>
-										<th>Rec Variant</th>
-										<th>Rec Value</th>
-										<th>Rec Process</th>
-										<th>Why</th>
-									</tr>
-									
-									<tr><td>1</td>
-										
-									<td>12</td>	
-									<td>Accept var 12</td>	
-									<td>Vars : 12,17,19</td>	
-									<td>20 persons already choose that</td>	
-									</td></tr>
-								</table>	
-								
-								
-								
-								
-							</td>
-							</tr>
+							
 						</table></p>
 					</div> <!-- entry -->
 				</div> <!-- post -->
@@ -494,6 +484,71 @@ originatorName1 = document.getElementById('para').value;
     <p>Centre de Recherche en Informatique, Universite Pantheon Sorbonne Paris 1 / Laboratoire de Recherche RIADI, Universite de la Mannouba</p>
 </div> 
 <!-- end #footer --> 
+
+<script>
+ function loadXMLDoc() {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      myFunction(this);
+    }
+  };
+  xmlhttp.open("GET", "Rapid.xml", true);
+  xmlhttp.send();
+}
+
+function myFunction(xml) {
+  var x, i, xmlDoc, txt;
+  xmlDoc = xml.responseXML;
+  txt = "";
+  x = xmlDoc.getElementsByTagName("Node");
+  for (i = 0; i< x.length; i++) {
+        txt += x[i].getAttribute('activity') + "<br>";
+  } 
+  document.getElementById("demo").innerHTML = txt;
+}
+
+
+
+
+
+
+function loadXMLDocc() {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      myFunction1(this);
+    }
+  };
+  xmlhttp.open("GET", "detailed.xml", true);
+  xmlhttp.send();
+}
+
+function myFunction1(xml) {
+  var x, i, xmlDoc, txt;
+  xmlDoc = xml.responseXML;
+  txt = "";
+  x = xmlDoc.getElementsByTagName("Activity");
+  for (i = 0; i< x.length; i++) {
+    txt += x[i].childNodes[0].nodeValue + "<br>";
+  }
+  document.getElementById("democ").innerHTML = txt;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
 	
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

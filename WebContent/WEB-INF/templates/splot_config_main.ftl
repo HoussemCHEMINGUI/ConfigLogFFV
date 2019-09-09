@@ -271,10 +271,6 @@ Released   : 20081103
         dojo.xhrGet(xhrArgs);   
 	}		
 -->
-function showTimestamp() {
-   var date = new Date();
-var timestamp = date.getTime(); var ts = Date.now();
-}
 </script>
 
 <script type="text/javascript"><!--

@@ -1,29 +1,29 @@
 package splot.services.handlers.conf;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import splar.core.fm.FeatureGroup;
 import splar.core.fm.FeatureModel;
 import splar.core.fm.FeatureTreeNode;
 import splar.core.fm.GroupedFeature;
 import splar.core.fm.SolitaireFeature;
 import splar.core.fm.configuration.ConfigurationEngine;
+import splot.configlog.models.ConfigurationTrace;
 import splot.core.FreeMarkerHandler;
 import splot.core.HandlerExecutionException;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 
 public class InteractiveConfigurationExportConfigurationHandler extends FreeMarkerHandler {
 
@@ -45,10 +45,13 @@ public class InteractiveConfigurationExportConfigurationHandler extends FreeMark
     			throw new HandlerExecutionException("Configuration engine must be created first");
     		}
         	
-        	templateModel.put("modelName", model.getName());
-        	templateModel.put("OriginatorName1", "Houssem");
+    		String uniqueID = UUID.randomUUID().toString().replace("-", "").substring(0,6);
 
-        	List features = new LinkedList();
+    		templateModel.put("id", uniqueID);
+        	templateModel.put("modelName", model.getName());
+        	templateModel.put("originatorName", request.getParameter("originatorName"));
+
+/*        	List features = new LinkedList();
         	for( FeatureTreeNode featureNode : model.getNodes() ) {
         		if ( featureNode.isInstantiated() ) {
 	        		Map featureData = new HashMap();
@@ -63,7 +66,8 @@ public class InteractiveConfigurationExportConfigurationHandler extends FreeMark
 	    			featureData.put("timeStamp",  featureNode.getProperty("timeStamp") == null ? "None" :featureNode.getProperty("timeStamp"));
 	    			features.add(featureData);
         		}
-        	}
+        	}*/
+        	List<Object> features =getConfigurationTraceToExport(session);
         	templateModel.put("features", features);	        	
 	        	
 		} catch (Exception e) {
@@ -115,5 +119,34 @@ public class InteractiveConfigurationExportConfigurationHandler extends FreeMark
 		}
 		return "error";
 	}	
+	
+	
+	/**
+	 * ConfigLog method to show the configuration traces
+	 * @param session
+	 * @return
+	 * @throws HandlerExecutionException
+	 */
+	private List<Object> getConfigurationTraceToExport(HttpSession session) throws HandlerExecutionException {
+		//Get the list of traces from  the session variable
+		List<ConfigurationTrace> listOfConfigTraces= (List<ConfigurationTrace>) session.getAttribute("configurationLogs");
+		if (listOfConfigTraces == null) {
+			throw new HandlerExecutionException("ConfigLog error: Configuration traces were not saved");
+		}
+		
+		List<Object> features = new LinkedList<Object> ();
+    	for( ConfigurationTrace configTrace : listOfConfigTraces ) {
+    		Map <String,Object> featureData = new HashMap();
+			featureData.put("id", configTrace.getLogFeatureId());
+			featureData.put("name", configTrace.getLogFeatureName());
+			featureData.put("type", configTrace.getLogFeatureType());
+			featureData.put("value", configTrace.getLogFeatureVale());
+			featureData.put("decisionType",configTrace.getLogDecisionType() );   // manual, propagated, auto-completion
+			featureData.put("decisionStep", configTrace.getLogDecisionStep());   
+			featureData.put("timeStamp",  configTrace.getLogTimestamp());
+			features.add(featureData);
+    	}
+    	return features;
+	}
 }
 
