@@ -28,32 +28,126 @@ Released   : 20081103
 <#if !hasError>
 
 <style type="text/css">
-  .hintBox {
-    margin-top: 0px;
-    color: #292929;
-    width: 880px;
-    border: 1px solid #BABABA;
-    background-color: white;
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-left: 10px;
-    margin-bottom: 1em;
-    -o-border-radius: 10px;
-    -moz-border-radius: 12px;
-    -webkit-border-radius: 10px;
-    -webkit-box-shadow: 0px 3px 7px #adadad;
-    border-radius: 10px;
-    -moz-box-sizing: border-box;
-    -opera-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    -khtml-box-sizing: border-box;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
+
+	.blackColor {
+		color: black;
+	}
+	
+	.guidanceBox {
+		padding: 7px;
+		border: 1px dashed #efdd51;
+		display: inline-block;
+		border-radius: 8px;
+		min-width: 200px;
+		font-size: 12px;
+	    font-weight: bold;
+	    color: green;
+	    text-align: left;
+	}
+
+	.hintBox {
+		margin-top: 0px;
+		color: #292929;
+		width: 880px;
+		border: 1px solid #BABABA;
+		background-color: white;
+		padding-left: 10px;
+		padding-right: 10px;
+		margin-left: 10px;
+		margin-bottom: 1em;
+		-o-border-radius: 10px;
+		-moz-border-radius: 12px;
+		-webkit-border-radius: 10px;
+		-webkit-box-shadow: 0px 3px 7px #adadad;
+		border-radius: 10px;
+		-moz-box-sizing: border-box;
+		-opera-sizing: border-box;
+		-webkit-box-sizing: border-box;
+		-khtml-box-sizing: border-box;
+		box-sizing: border-box;
+		overflow: hidden;
+	}
 </style>
+
+
+<!-- jQuery -->
+<script src="http://code.jquery.com/jquery-3.3.1.slim.js" integrity="sha256-fNXJFIlca05BIO2Y5zh1xrShK3ME+/lYZ0j+ChxX2DA=" crossorigin="anonymous"></script>
+
 
 <script type="text/javascript"> 
 
+	var Partial = [];
+	var recommendationList = [];
+	
+	let path = 'datasets/rapid/less-than-mean-duration/HoussemBikeV6/RapidProcessWithoutundoChoices103seconds.xml';
+	
+	function xmlParser(xml) {
+		var x, i, xmlDoc, txt;
+		xmlDoc = xml.responseXML;
+		txt = "";
+		x = xmlDoc.getElementsByTagName("Activity");
+		for (i = 0; i< x.length; i++) {
+			let value = x[i].innerHTML;
+			let parts = value.split('-');
+			
+			optionName = parts[0] || '';
+			optionType = parts[1] || '';
+			optionSelected = parts[2] || '';
+			optionMode = parts[3] || '';
+			
+			if(optionSelected == '1')optionSelected = 'select';
+			else if(optionSelected == '0')optionSelected = 'deselect';
+			 
+			if(optionMode.toLowerCase() == 'manual'){
+				recommendationList.push({
+					'optionName': optionName,
+					'optionType': optionType,
+					'optionSelected': optionSelected,
+					'optionMode': optionMode.toLowerCase(),
+				});
+			}
+		}
+	}
+	
+	 function loadXMLFile(path) {
+		var xmlhttp = new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200)xmlParser(this);
+		};
+		
+		xmlhttp.open("GET", path, true);
+		xmlhttp.send();
+	}
+	
+	    
+	loadXMLFile(path);
+    
+ 	
+
+	function updateGuidance(operation, value){
+		const opTypeConf = 'conf';
+		const opTypeToggle = 'toggle';
+		const opTypeUndo = 'undo';
+		
+		let pureItem = value.split(":")[0] || value;
+		let doStatus = value.split(":")[1] || 0;
+		
+		doStatus = (doStatus == 1 ? 'select' : 'deselect');
+		
+		let itemTitle = document.getElementById(pureItem + '_name').getAttribute('title');
+		
+		let nextChoise = recommendationList.slice(0, 1)[0];
+		let nextChoiseTitle = nextChoise.optionName;
+		let nextChoiseSelected = nextChoise.optionSelected;
+		
+		console.log(nextChoiseSelected, ' | ' , doStatus , ' | ', itemTitle , ' | ' , nextChoiseTitle);
+		
+		// Handle Do and Do not
+		if (itemTitle == nextChoiseTitle && doStatus == nextChoiseSelected) {
+			recommendationList = recommendationList.slice(1);
+		}
+	}
+	
 	dojo.require("dijit.form.Button");
 	dojo.require("dijit.Dialog");
 	dojo.require("dijit.ProgressBar");	
@@ -186,6 +280,17 @@ Released   : 20081103
 			var timeStamp = today.getUTCDate() +"/" + today.getUTCMonth() +"/" + today.getUTCFullYear() +" " + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds() + ":" + today.getMilliseconds();   
 			parameters = '&' + parameter + '=' + value + '&'+'timeStamp='+timeStamp;
 		}
+		
+		//console.log(value + " | " + operation + " | " + parameter);
+		updateGuidance(operation, value);
+		
+		let recommendedOrder = '<ol type="1">';
+		recommendationList.forEach(function(item){
+			recommendedOrder += '<li>' + item.optionName + ' | ' + item.optionSelected + '</li>';
+		});
+		recommendedOrder += '</ol>';
+		
+		document.getElementById('recommendedOrder').innerHTML = recommendedOrder;
 	
 	    var xhrArgs = {
             url: "/SPLOT/SplotConfigurationServlet?action=interactive_configuration_updates&op=" + operation + parameters,
@@ -378,29 +483,21 @@ Released   : 20081103
 				
 				<div class="post"> 
 					<h1 class="title"><a href="#">${modelName} (${countFeatures} variants)</a></h1>
-</br></br>
+				</br></br>
 			<input class="selectedFeature" id="originatorName" type="text" value="Originator Name" size="17"/> &ensp;
-			</br>								 				
-
-<script>
-
-function exportCSV() {
-
-	var originatorName = document.getElementById('originatorName').value || '';
-
-	window.open(
-		'/SPLOT/SplotConfigurationServlet?action=export_configuration_csv&originatorName=' + originatorName,
-		'_blank'
-	);
-}
-
-</script>
+			</br></br>					 				
 
 <p><table width=820 border=0>
 							<tr>
 							<td align=left valign=top>
 								<div id="fm">
 								</div>
+							</td>
+							<td align=center valign=top>
+								<span class="guidanceBox">
+									<b class="blackColor">Guidance type:</b> <span id="guidanceType">${guidanceType}</span><hr>
+									<b class="blackColor">recommended order:</b> <span id="recommendedOrder"></span><br>
+								</span>	
 							</td>
 							<td align=right valign=top>
 							<!--	
@@ -462,12 +559,6 @@ function exportCSV() {
 						  
 															</td></tr>
 								
-
-
-
-								
-								
-								
 							
 						</table></p>
 					</div> <!-- entry -->
@@ -486,30 +577,54 @@ function exportCSV() {
 <!-- end #footer --> 
 
 <script>
+
+	var guidanceType = document.getElementById("guidanceType").innerText;
+	
+	guidanceType = (guidanceType == "-1" ? "No" : guidanceType);
+	guidanceType = guidanceType[0].toUpperCase() +  guidanceType.slice(1);
+	 
+	document.getElementById("guidanceType").innerHTML = guidanceType;
+	
+	let recommendedOrder = '<ol type="1">';
+	recommendationList.forEach(function(item){
+		recommendedOrder += '<li>' + item.optionName + ' | ' + item.optionSelected + '</li>';
+	});
+	recommendedOrder += '</ol>';
+	
+	document.getElementById('recommendedOrder').innerHTML = recommendedOrder;
+	
+ 
+	function exportCSV() {
+	
+		var originatorName = document.getElementById('originatorName').value || '';
+	
+		window.open(
+			'/SPLOT/SplotConfigurationServlet?action=export_configuration_csv&originatorName=' + originatorName,
+			'_blank'
+		);
+	}
+	
  function loadXMLDoc() {
-  var xmlhttp = new XMLHttpRequest();
-  xmlhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      myFunction(this);
-    }
-  };
-  xmlhttp.open("GET", "Rapid.xml", true);
-  xmlhttp.send();
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			myFunction(this);
+		}
+	};
+	xmlhttp.open("GET", "Rapid.xml", true);
+	xmlhttp.send();
 }
 
 function myFunction(xml) {
-  var x, i, xmlDoc, txt;
-  xmlDoc = xml.responseXML;
-  txt = "";
-  x = xmlDoc.getElementsByTagName("Node");
-  for (i = 0; i< x.length; i++) {
-        txt += x[i].getAttribute('activity') + "<br>";
-  } 
-  document.getElementById("demo").innerHTML = txt;
+	var x, i, xmlDoc, txt;
+	xmlDoc = xml.responseXML;
+	txt = "";
+	x = xmlDoc.getElementsByTagName("Node");
+	for (i = 0; i< x.length; i++) {
+		txt += x[i].getAttribute('activity') + "<br>";
+	}
+	document.getElementById("demo").innerHTML = txt;
 }
-
-
-
 
 
 
@@ -537,20 +652,6 @@ function myFunction1(xml) {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-</script>
-	
-<script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
 document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
@@ -561,5 +662,7 @@ pageTracker._trackPageview();
 } catch(err) {}
 
 </script>
+
+
 </body>
 </html>

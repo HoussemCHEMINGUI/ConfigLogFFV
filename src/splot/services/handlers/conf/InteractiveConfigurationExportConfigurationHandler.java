@@ -1,4 +1,8 @@
 package splot.services.handlers.conf;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.Calendar;
@@ -7,6 +11,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -67,8 +73,20 @@ public class InteractiveConfigurationExportConfigurationHandler extends FreeMark
 	    			features.add(featureData);
         		}
         	}*/
-        	List<Object> features =getConfigurationTraceToExport(session);
-        	templateModel.put("features", features);	        	
+        	List<Object> features = getConfigurationTraceToExport(session);
+        	templateModel.put("features", features);	
+        	
+        	System.out.println("TEST2");
+	        try (Stream<Path> walk = Files.walk(Paths.get("/datasets/rapid/HoussemBikeV6"))) {
+
+				List<String> result = walk.filter(Files::isRegularFile)
+						.map(x -> x.toString()).collect(Collectors.toList());
+
+				result.forEach(System.out::println);
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 	        	
 		} catch (Exception e) {
 			e.printStackTrace();

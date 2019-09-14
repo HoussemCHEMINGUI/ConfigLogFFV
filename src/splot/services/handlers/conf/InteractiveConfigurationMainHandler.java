@@ -1,9 +1,15 @@
 package splot.services.handlers.conf;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -116,6 +122,20 @@ public abstract class InteractiveConfigurationMainHandler extends FreeMarkerHand
         	templateModel.put("countFeatures", confEngine.getModel().countFeatures());
         	templateModel.put("countInstantiatedFeatures", confEngine.getModel().getInstantiatedNodes().size());
 			templateModel.put("done", confEngine.isDone());
+			templateModel.put("guidanceType", request.getParameter("guidanceType"));
+			
+			System.out.println("TEST");
+	        try (Stream<Path> walk = Files.walk(Paths.get("/datasets/rapid/HoussemBikeV6"))) {
+
+				List<String> result = walk.filter(Files::isRegularFile)
+						.map(x -> x.toString()).collect(Collectors.toList());
+
+				result.forEach(System.out::println);
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 			
 		} catch (HandlerExecutionException e1) {
 			throw e1;

@@ -24,7 +24,9 @@ Released   : 20081103
  
 function openModelSelectionPage() 
 {
-	ajax_loadContent('model_list','/SPLOT/SplotAnalysesServlet?action=select_model&enableSelection=true&selectionMode=single&serviceURL=/SPLOT/SplotConfigurationServlet&serviceHTTPMethod=GET&showModelDetails=false&serviceAction=interactive_configuration_main');
+	var url = new URL(window.location.href);
+	var guidanceType = url.searchParams.get("guidanceType") || -1;
+	ajax_loadContent('model_list','/SPLOT/SplotAnalysesServlet?action=select_model&enableSelection=true&selectionMode=single&serviceURL=/SPLOT/SplotConfigurationServlet&serviceHTTPMethod=GET&showModelDetails=false&serviceAction=interactive_configuration_main&guidanceType=' + guidanceType);
 } 
 -->
 </script>
