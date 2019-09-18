@@ -124,18 +124,6 @@ public abstract class InteractiveConfigurationMainHandler extends FreeMarkerHand
 			templateModel.put("done", confEngine.isDone());
 			templateModel.put("guidanceType", request.getParameter("guidanceType"));
 			
-			System.out.println("TEST");
-	        try (Stream<Path> walk = Files.walk(Paths.get("/datasets/rapid/HoussemBikeV6"))) {
-
-				List<String> result = walk.filter(Files::isRegularFile)
-						.map(x -> x.toString()).collect(Collectors.toList());
-
-				result.forEach(System.out::println);
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
 			
 		} catch (HandlerExecutionException e1) {
 			throw e1;

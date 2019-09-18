@@ -77,15 +77,18 @@ Released   : 20081103
 <script type="text/javascript"> 
 
 	var Partial = [];
-	var recommendationList = [];
+	var EnabledActivites = [];
+	var FinalOrder = [];
+	var filesData = [];
+	var guidanceType = '${guidanceType}';
 	
-	let path = 'datasets/rapid/less-than-mean-duration/HoussemBikeV6/RapidProcessWithoutundoChoices103seconds.xml';
+	var guideXmlFilesPath = JSON.parse('${guideXmlFilesPath}');
 	
-	function xmlParser(xml) {
-		var x, i, xmlDoc, txt;
+	function xmlParser(xml, fileName) {
+		var x, i, xmlDoc, txt = "";
 		xmlDoc = xml.responseXML;
-		txt = "";
 		x = xmlDoc.getElementsByTagName("Activity");
+		var fileData = [];
 		for (i = 0; i< x.length; i++) {
 			let value = x[i].innerHTML;
 			let parts = value.split('-');
@@ -97,32 +100,44 @@ Released   : 20081103
 			
 			if(optionSelected == '1')optionSelected = 'select';
 			else if(optionSelected == '0')optionSelected = 'deselect';
-			 
-			if(optionMode.toLowerCase() == 'manual'){
-				recommendationList.push({
-					'optionName': optionName,
-					'optionType': optionType,
-					'optionSelected': optionSelected,
-					'optionMode': optionMode.toLowerCase(),
-				});
-			}
+			
+			fileData.push({
+				'optionName': optionName,
+				'optionType': optionType,
+				'optionSelected': optionSelected,
+				'optionMode': optionMode.toLowerCase(),
+			});
+			
+			if (!EnabledActivites.includes(optionName) && optionMode.toLowerCase() == 'manual') 
+				EnabledActivites.push(optionName);
 		}
+		let seconds = fileName.split('seconds')[0].trim();
+		//console.log(EnabledActivites);
+		filesData.push({
+			'fileName': fileName,
+			'seconds': seconds,
+			'data': fileData,
+		});
 	}
 	
-	 function loadXMLFile(path) {
+	 function loadXMLFile(path, fileName) {
 		var xmlhttp = new XMLHttpRequest();
 		xmlhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200)xmlParser(this);
+			if (this.readyState == 4 && this.status == 200)xmlParser(this, fileName);
 		};
-		
 		xmlhttp.open("GET", path, true);
 		xmlhttp.send();
 	}
 	
+	
+	guideXmlFilesPath.forEach((file) => {
+		let filePath = file.split('WebContent/')[1];
+		let fileName = filePath.split('/');
+		fileName = fileName[fileName.length-1];
+		loadXMLFile(filePath, fileName);
+	});
 	    
-	loadXMLFile(path);
-    
- 	
+	console.log(filesData);
 
 	function updateGuidance(operation, value){
 		const opTypeConf = 'conf';
@@ -130,23 +145,102 @@ Released   : 20081103
 		const opTypeUndo = 'undo';
 		
 		let pureItem = value.split(":")[0] || value;
-		let doStatus = value.split(":")[1] || 0;
-		
-		doStatus = (doStatus == 1 ? 'select' : 'deselect');
+		let optionSelected = value.split(":")[1] || 0;
+		optionSelected = (optionSelected == 1 ? 'select' : 'deselect');
 		
 		let itemTitle = document.getElementById(pureItem + '_name').getAttribute('title');
 		
-		let nextChoise = recommendationList.slice(0, 1)[0];
-		let nextChoiseTitle = nextChoise.optionName;
-		let nextChoiseSelected = nextChoise.optionSelected;
+		Partial.push({
+			'optionName': itemTitle,
+			'optionSelected': optionSelected,
+		});
 		
-		console.log(nextChoiseSelected, ' | ' , doStatus , ' | ', itemTitle , ' | ' , nextChoiseTitle);
+		if (EnabledActivites.indexOf(itemTitle) != -1)
+			EnabledActivites.splice(EnabledActivites.indexOf(itemTitle), 1);
 		
-		// Handle Do and Do not
-		if (itemTitle == nextChoiseTitle && doStatus == nextChoiseSelected) {
-			recommendationList = recommendationList.slice(1);
-		}
+		let weights = [];
+		filesData.forEach((file) => {
+			
+			let interSection = getInterSection(file.data, Partial);
+			let weight = interSection/Partial.length;
+			
+			weights.push({
+				'fileName': file.fileName,
+				'weight': weight,
+				'seconds': file.seconds,
+			});
+		});
+		
+		
+		let FinalOrderTmp = [];
+		
+		console.log(weights);
+		
+		EnabledActivites.forEach((activity) => {
+		
+			// DO
+			let doValue = 0;
+			
+			filesData.forEach((file) => {
+				for(let item of file.data) { 
+					if (item.optionName == activity) {
+						for(let weight of weights) {
+							if (weight.fileName == file.fileName){
+								doValue += (weight.weight * file.seconds);
+								console.log(file.fileName , ' | ' , activity, ' | do: ', doValue);
+								break;
+							}
+						}
+						break;
+					}
+				}
+			});
+			
+			// DO NOT
+			let donotValue = 0;
+			
+			filesData.forEach((file) => {
+				var found = false;
+				for(let item of file.data) {
+					if (item.optionName == activity) {
+						// console.log(activity, ' | ' , file.fileName);
+						found = true;
+						break;
+					}
+				}
+				
+				if (!found) {
+					for(let weight of weights) {
+						if (weight.fileName == file.fileName) {
+							donotValue += (weight.weight * file.seconds);
+							break;
+						}
+					}
+				}
+			});
+			
+			FinalOrderTmp.push({
+				'doValue': doValue,
+				'donotValue': donotValue,
+				'activity': activity,
+				'valueABS': Math.abs(doValue-donotValue),
+			});
+		});
+		FinalOrder = FinalOrderTmp;
+		console.log(FinalOrder);
 	}
+	
+	
+	function getInterSection(set1, set2){
+		let ret = 0;
+		set1.forEach((item1) => {
+			set2.forEach((item2) => {
+				ret += (item1.optionName == item2.optionName && item1.optionSelected == item2.optionSelected);
+			});
+		});
+		return ret;
+	}
+	
 	
 	dojo.require("dijit.form.Button");
 	dojo.require("dijit.Dialog");
@@ -284,13 +378,14 @@ Released   : 20081103
 		//console.log(value + " | " + operation + " | " + parameter);
 		updateGuidance(operation, value);
 		
-		let recommendedOrder = '<ol type="1">';
-		recommendationList.forEach(function(item){
-			recommendedOrder += '<li>' + item.optionName + ' | ' + item.optionSelected + '</li>';
-		});
-		recommendedOrder += '</ol>';
+		FinalOrder.sort((a, b) => (a.valueABS > b.valueABS) ? -1 : 1)
 		
-		document.getElementById('recommendedOrder').innerHTML = recommendedOrder;
+		let orderList = '<ol type="1">';
+		FinalOrder.forEach(function(item){
+			orderList += '<li>' + item.activity + '</li>';
+		});
+		orderList += '</ol>';
+		document.getElementById('recommendedOrder').innerHTML = orderList;
 	
 	    var xhrArgs = {
             url: "/SPLOT/SplotConfigurationServlet?action=interactive_configuration_updates&op=" + operation + parameters,
@@ -585,13 +680,13 @@ Released   : 20081103
 	 
 	document.getElementById("guidanceType").innerHTML = guidanceType;
 	
-	let recommendedOrder = '<ol type="1">';
+	/*let recommendedOrder = '<ol type="1">';
 	recommendationList.forEach(function(item){
 		recommendedOrder += '<li>' + item.optionName + ' | ' + item.optionSelected + '</li>';
 	});
 	recommendedOrder += '</ol>';
 	
-	document.getElementById('recommendedOrder').innerHTML = recommendedOrder;
+	document.getElementById('recommendedOrder').innerHTML = recommendedOrder;*/
 	
  
 	function exportCSV() {

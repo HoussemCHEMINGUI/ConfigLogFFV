@@ -1,0 +1,32 @@
+<!-- This model was created online using SPLOT's Feature Model Editor (http://www.splot-research.org) on mer., sept. 18, 2019 - 10:27 AM  -->
+<feature_model name="Eshop">
+<meta>
+<data name="description">TestingConfiLog</data>
+<data name="creator">HoussemCHEMINGUI</data>
+<data name="address"></data>
+<data name="email">houss.chemingui@gmail.com</data>
+<data name="phone"></data>
+<data name="website"></data>
+<data name="organization">Paris1</data>
+<data name="department"></data>
+<data name="date"></data>
+<data name="reference"></data>
+</meta>
+<feature_tree>
+:r Eshop(_r)
+	:m Catalogue(_r_1)
+	:m Payment(_r_5)
+		:g (_r_5_16) [1,*] 
+			: BankTransfer(_r_5_16_17)
+			: CreditBank(_r_5_16_18)
+	:m Security(_r_6)
+		:g (_r_6_13) [1,1] 
+			: High(_r_6_13_14)
+			: Standard(_r_6_13_15)
+	:o Search(_r_8)
+	:o Logging(_r_19)
+</feature_tree>
+<constraints>
+constraint_1:~_r_5_16_18 or _r_6_13_14
+</constraints>
+</feature_model>

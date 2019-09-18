@@ -57,19 +57,8 @@ public class SelectFeatureModelHandler extends FreeMarkerHandler {
 	        templateModel.put("serviceAction", serviceAction != null ? serviceAction : "");
 	        templateModel.put("sortBy", sortBy == null ? "features" : sortBy);
 	        templateModel.put("showModelDetails", showModelDetails != null ? Boolean.valueOf(showModelDetails) : true);
-	        
-	        System.out.println("TEST");
-	        
-	        try (Stream<Path> walk = Files.walk(Paths.get("/home/khaled/Desktop/PHD/splot/splot-research/WebContent/datasets/rapid/HoussemBikeV6"))) {
-
-				List<String> result = walk.filter(Files::isRegularFile)
-						.map(x -> x.toString()).collect(Collectors.toList());
-
-				result.forEach(System.out::println);
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+	       
+	        // HERE Debug
 	        
 		} 
         catch( HandlerExecutionException handlerExcObj ) {

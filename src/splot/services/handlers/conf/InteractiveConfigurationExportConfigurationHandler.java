@@ -74,19 +74,8 @@ public class InteractiveConfigurationExportConfigurationHandler extends FreeMark
         		}
         	}*/
         	List<Object> features = getConfigurationTraceToExport(session);
-        	templateModel.put("features", features);	
+        	templateModel.put("features", features);
         	
-        	System.out.println("TEST2");
-	        try (Stream<Path> walk = Files.walk(Paths.get("/datasets/rapid/HoussemBikeV6"))) {
-
-				List<String> result = walk.filter(Files::isRegularFile)
-						.map(x -> x.toString()).collect(Collectors.toList());
-
-				result.forEach(System.out::println);
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 	        	
 		} catch (Exception e) {
 			e.printStackTrace();

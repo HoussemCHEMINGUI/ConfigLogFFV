@@ -19,6 +19,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.tomcat.jni.File;
+import org.json.JSONArray;
+
+import com.google.gson.Gson;
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
 
 import splar.core.fm.FeatureGroup;
 import splar.core.fm.FeatureTreeNode;
@@ -30,6 +34,11 @@ import splot.core.FreeMarkerHandler;
 import splot.core.HandlerExecutionException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
+
+import java.util.Iterator;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 public abstract class InteractiveConfigurationMainHandler2 extends FreeMarkerHandler {
 
@@ -117,7 +126,8 @@ public abstract class InteractiveConfigurationMainHandler2 extends FreeMarkerHan
     		}	    			    		 
     		templateModel.put("features", featuresList);
     		
-    		templateModel.put("modelName", confEngine.getModel().getName());
+    		String modelName = confEngine.getModel().getName();
+    		templateModel.put("modelName", modelName);
         	templateModel.put("countFeatures", confEngine.getModel().countFeatures());
         	templateModel.put("countInstantiatedFeatures", confEngine.getModel().getInstantiatedNodes().size());
 			templateModel.put("done", confEngine.isDone());
@@ -126,40 +136,58 @@ public abstract class InteractiveConfigurationMainHandler2 extends FreeMarkerHan
 			templateModel.put("guidanceType", guidanceType);
 			
 			
-			if (guidanceType == "") {
+			if (guidanceType == "rapid") {
 				
 			}
 			
-			System.out.println(modelFileName);
-			System.out.println(guidanceType );
 			
-			//get xml files paths
+			// Handle guide xml files
 
-			System.out.println("TEST");
-	        try (Stream<Path> walk = Files.walk(Paths.get("/datasets/rapid/HoussemBikeV6"))) {
+			String guideXmlFilesPath = "/home/khaled/Desktop/PHD/splot/splot-research/WebContent/datasets/" + guidanceType + "/" + modelName;
+			
+			System.out.println(guideXmlFilesPath );
+			
+			
+			
+	        try (Stream<Path> walk = Files.walk(Paths.get(guideXmlFilesPath))) {
 
-				List<String> result = walk.filter(Files::isRegularFile)
-						.map(x -> x.toString()).collect(Collectors.toList());
+	        	List<String> result = walk.filter(Files::isRegularFile)
+						.map(x -> x.toString())
+						.collect(Collectors.toList());
 
 				result.forEach(System.out::println);
-
+				
+				templateModel.put("guideXmlFilesPath", new Gson().toJson(result));
+				
+				
+//				JSONParser jsonParser = new JSONParser();         
+//		        try (FileReader reader = new FileReader(guideXmlFilesPath + result))
+//		        {
+//		            //Read JSON file
+//		            Object obj = jsonParser.parse(reader);
+//		 
+//		            JSONArray employeeList = (JSONArray) obj;
+//		            System.out.println(employeeList);
+//		             
+//		            //Iterate over employee array
+//		            employeeList.forEach( emp -> parseEmployeeObject( (JSONObject) emp ) );
+//		 
+//		        } catch (FileNotFoundException e) {
+//		            e.printStackTrace();
+//		        } catch (IOException e) {
+//		            e.printStackTrace();
+//		        } catch (ParseException e) {
+//		            e.printStackTrace();
+//		        }
+		        
+		        
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 	        
-	        System.out.println("TEST3");
-	        try (Stream<Path> walk = Files.walk(Paths.get("/datasets/rapid/HoussemBikeV6"))) {
-
-				List<String> result = walk.filter(Files::isRegularFile)
-						.map(x -> x.toString()).collect(Collectors.toList());
-
-				result.forEach(System.out::println);
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-			
+	        
+	        
 			
 			
 			
