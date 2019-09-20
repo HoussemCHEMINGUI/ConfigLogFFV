@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+exit<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
 Design by Free CSS Templates
 http://www.freecsstemplates.org
@@ -98,8 +98,8 @@ Released   : 20081103
 			optionSelected = parts[2] || '';
 			optionMode = parts[3] || '';
 			
-			if(optionSelected == '1')optionSelected = 'select';
-			else if(optionSelected == '0')optionSelected = 'deselect';
+			if(optionSelected == '1') optionSelected = 'select';
+			else if(optionSelected == '0') optionSelected = 'deselect';
 			
 			fileData.push({
 				'optionName': optionName,
@@ -108,7 +108,7 @@ Released   : 20081103
 				'optionMode': optionMode.toLowerCase(),
 			});
 			
-			if (!EnabledActivites.includes(optionName) && optionMode.toLowerCase() == 'manual') 
+			if (!EnabledActivites.includes(optionName))
 				EnabledActivites.push(optionName);
 		}
 		let seconds = fileName.split('seconds')[0].trim();
@@ -139,13 +139,113 @@ Released   : 20081103
 	    
 	console.log(filesData);
 
+	function checkAutoChanges() {
+		
+		// console.log('deseleted: ');
+		let deselectedVariants = document.getElementsByClassName('deselectedFeature');
+		for(let item of deselectedVariants) {
+			let itemName = item.innerHTML.trim();
+			if (itemName.length == '')continue;
+			
+			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
+			
+			if (EnabledActivites.indexOf(itemName) != -1) {
+				
+				EnabledActivites.splice(EnabledActivites.indexOf(itemName), 1);
+				
+				Partial.push({
+					'optionName': itemName,
+					'optionSelected': 'deselect',
+				});
+			}
+		}
+		
+		// console.log('seleted: ');
+		let selectedVariants = document.getElementsByClassName('selectedFeature');
+		for(let item of selectedVariants) {
+			let itemName = item.innerHTML.trim();
+			if (itemName.length == '')continue;
+			
+			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
+			
+			if (EnabledActivites.indexOf(itemName) != -1) {
+				
+				EnabledActivites.splice(EnabledActivites.indexOf(itemName), 1);
+				
+				Partial.push({
+					'optionName': itemName,
+					'optionSelected': 'select',
+				});
+			}
+		}
+	}
+	
+	function reSortList() {
+		let newOrder = [];
+		let childrens = document.getElementById('_r_children').children;
+		
+		FinalOrder.forEach((item) => {
+		
+			for(let act of childrens) {
+				let inner = act.innerHTML;
+				
+				if (inner.indexOf(item.activity) != -1){
+				
+					let flag = false;
+					for(let pre of newOrder) {
+						if (pre.indexOf(item.activity) != -1) {
+							flag = true;
+							break;
+						}
+					}
+					
+					if (!flag) newOrder.push(inner);
+					break;
+				}
+			}
+		});
+		
+		Partial.forEach((item) => {
+			
+			for(let act of childrens) {
+				let inner = act.innerHTML;
+				
+				if (inner.indexOf(item.optionName) != -1){
+				
+					let flag = false;
+					for(let pre of newOrder) {
+						if (pre.indexOf(item.optionName) != -1) {
+							flag = true;
+							break;
+						}
+					}
+					
+					if (!flag) newOrder.push(inner);
+					break;
+				}
+			}
+		});
+		
+		document.getElementById('_r_children').innerHTML = newOrder;
+		
+	}
+	
 	function updateGuidance(operation, value){
 		const opTypeConf = 'conf';
 		const opTypeToggle = 'toggle';
 		const opTypeUndo = 'undo';
 		
-		let pureItem = value.split(":")[0] || value;
-		let optionSelected = value.split(":")[1] || 0;
+		// console.log(operation, value);
+		
+		if (operation == opTypeUndo) {
+			
+			checkAutoChanges();
+			
+			return;
+		} 
+		
+		let pureItem = (typeof value != 'number' ? value.split(":")[0] : value);
+		let optionSelected = (typeof value != 'number' ? value.split(":")[1] : 0);
 		optionSelected = (optionSelected == 1 ? 'select' : 'deselect');
 		
 		let itemTitle = document.getElementById(pureItem + '_name').getAttribute('title');
@@ -157,77 +257,117 @@ Released   : 20081103
 		
 		if (EnabledActivites.indexOf(itemTitle) != -1)
 			EnabledActivites.splice(EnabledActivites.indexOf(itemTitle), 1);
-		
-		let weights = [];
-		filesData.forEach((file) => {
 			
-			let interSection = getInterSection(file.data, Partial);
-			let weight = interSection/Partial.length;
+		// Wait till features table updates (auto select and deselected done if existed!) then calc recommendation! 
+		setTimeout(() => {
+		
+			checkAutoChanges();
 			
-			weights.push({
-				'fileName': file.fileName,
-				'weight': weight,
-				'seconds': file.seconds,
-			});
-		});
-		
-		
-		let FinalOrderTmp = [];
-		
-		console.log(weights);
-		
-		EnabledActivites.forEach((activity) => {
-		
-			// DO
-			let doValue = 0;
-			
+			let weights = [];
 			filesData.forEach((file) => {
-				for(let item of file.data) { 
-					if (item.optionName == activity) {
-						for(let weight of weights) {
-							if (weight.fileName == file.fileName){
-								doValue += (weight.weight * file.seconds);
-								console.log(file.fileName , ' | ' , activity, ' | do: ', doValue);
-								break;
-							}
-						}
-						break;
-					}
-				}
-			});
-			
-			// DO NOT
-			let donotValue = 0;
-			
-			filesData.forEach((file) => {
-				var found = false;
-				for(let item of file.data) {
-					if (item.optionName == activity) {
-						// console.log(activity, ' | ' , file.fileName);
-						found = true;
-						break;
-					}
-				}
 				
-				if (!found) {
-					for(let weight of weights) {
-						if (weight.fileName == file.fileName) {
-							donotValue += (weight.weight * file.seconds);
+				let interSection = getInterSection(file.data, Partial);
+				let weight = interSection/Partial.length;
+				
+				weights.push({
+					'fileName': file.fileName,
+					'weight': weight,
+					'seconds': file.seconds,
+				});
+			});
+			
+			
+			let FinalOrderTmp = [];
+			console.log('Weights:'); console.log(weights);
+			
+			EnabledActivites.forEach((activity) => {
+			
+				const INF = -1e9;
+				
+				let betterChoise = { 'val': -INF, 'type': 'default'}
+				
+				// DO
+				let doValue = INF;
+				
+				filesData.forEach((file) => {
+					for(let item of file.data) { 
+						if (item.optionName == activity && item.optionMode == 'manual') {
+							for(let weight of weights) {
+								if (weight.fileName == file.fileName){
+									if (doValue == INF) doValue = 0;
+									doValue += (weight.weight * file.seconds);
+									
+									if (betterChoise.val > file.seconds) {
+										betterChoise.val = file.seconds;
+										betterChoise.type = 'select';
+									}
+									
+									break;
+								}
+							}
+							// console.log(file.fileName , ' | ' , activity, ' | do: ', doValue, ' | ' , item.optionSelected);
 							break;
 						}
 					}
-				}
+				});
+				
+				if (doValue == INF) doValue = 0;
+				
+				// DO NOT
+				let donotValue = 0;
+				
+				filesData.forEach((file) => {
+					var found = false;
+					for(let item of file.data) {
+						if (item.optionName == activity && item.optionMode == 'manual') {
+							// console.log(activity, ' | ' , file.fileName);
+							found = true;
+							break;
+						}
+					}
+					
+					if (!found) {
+						for(let weight of weights) {
+							if (weight.fileName == file.fileName) {
+								donotValue += (weight.weight * file.seconds);
+								
+								if (betterChoise.val > file.seconds) {
+									betterChoise.val = file.seconds;
+									betterChoise.type = 'deselect';
+								}
+								
+								break;
+							}
+						}
+					}
+				});
+				
+				FinalOrderTmp.push({
+					'doValue': doValue,
+					'donotValue': donotValue,
+					'activity': activity,
+					'valueABS': Math.abs(doValue-donotValue),
+					'betterChoise': betterChoise.type, 
+				});
 			});
+			FinalOrder = FinalOrderTmp;
 			
-			FinalOrderTmp.push({
-				'doValue': doValue,
-				'donotValue': donotValue,
-				'activity': activity,
-				'valueABS': Math.abs(doValue-donotValue),
+			console.log(FinalOrder);
+			console.log("-------\n");
+		
+			FinalOrder.sort((a, b) => (a.valueABS > b.valueABS) ? -1 : 1)
+			
+			// reSortList();
+			
+			let orderList = '<ol type="1">';
+			FinalOrder.forEach(function(item){
+				orderList += '<li style="color:gray;">' + item.activity + ' - <span style="color:' 
+					+  (item.betterChoise == 'select' ? 'green' : 'red') + ';">' + item.betterChoise + '</span></li>';
 			});
-		});
-		FinalOrder = FinalOrderTmp;
-		console.log(FinalOrder);
+			orderList += '</ol>';
+			document.getElementById('recommendedOrder').innerHTML = orderList;
+			
+		}, 1000); // wait 1 second
 	}
 	
 	
@@ -377,15 +517,6 @@ Released   : 20081103
 		
 		//console.log(value + " | " + operation + " | " + parameter);
 		updateGuidance(operation, value);
-		
-		FinalOrder.sort((a, b) => (a.valueABS > b.valueABS) ? -1 : 1)
-		
-		let orderList = '<ol type="1">';
-		FinalOrder.forEach(function(item){
-			orderList += '<li>' + item.activity + '</li>';
-		});
-		orderList += '</ol>';
-		document.getElementById('recommendedOrder').innerHTML = orderList;
 	
 	    var xhrArgs = {
             url: "/SPLOT/SplotConfigurationServlet?action=interactive_configuration_updates&op=" + operation + parameters,
@@ -463,6 +594,8 @@ Released   : 20081103
 						document.getElementById('configuration-done-element').style.display ='';				
 					}
 		     	}
+		     	
+		     	checkAutoChanges();
             },
             error: function(error) {
                 closeNotificationDialog();                
