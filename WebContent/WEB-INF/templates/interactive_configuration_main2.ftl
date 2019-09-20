@@ -102,15 +102,17 @@ Released   : 20081103
 		var x, i, xmlDoc, txt = "";
 		xmlDoc = xml.responseXML;
 		x = xmlDoc.getElementsByTagName("Activity");
+		y = xmlDoc.getElementsByTagName("Resource");
 		var fileData = [];
 		for (i = 0; i< x.length; i++) {
 			let value = x[i].innerHTML;
 			let parts = value.split('-');
 			
-			optionName = parts[0] || '';
-			optionType = parts[1] || '';
-			optionSelected = parts[2] || '';
-			optionMode = parts[3] || '';
+			let optionName = parts[0] || '';
+			let optionType = parts[1] || '';
+			let optionSelected = parts[2] || '';
+			let optionMode = parts[3] || '';
+			let resource = y[i].innerHTML; 
 			
 			if(optionSelected == '1') optionSelected = 'select';
 			else if(optionSelected == '0') optionSelected = 'deselect';
@@ -120,20 +122,21 @@ Released   : 20081103
 				'optionType': optionType,
 				'optionSelected': optionSelected,
 				'optionMode': optionMode.toLowerCase(),
+				'resource': resource, 
 			});
 			
 			if (!EnabledActivites.includes(optionName))
 				EnabledActivites.push(optionName);
 		}
-		let seconds = fileName.split('seconds')[0].trim();
+		let guidance = fileName.split('guidance')[0].trim();
 		//console.log(EnabledActivites);
 		filesData.push({
 			'fileName': fileName,
-			'seconds': seconds,
+			'guidance': guidance,
 			'data': fileData,
 		});
 		
-		filesData.sort( (a, b) => (a.seconds < b.seconds) ? -1 : 1);
+		filesData.sort( (a, b) => (a.guidance < b.guidance) ? -1 : 1);
 	}
 	
 	 function loadXMLFile(path, fileName) {
@@ -283,7 +286,7 @@ Released   : 20081103
 				weights.push({
 					'fileName': file.fileName,
 					'weight': weight,
-					'seconds': file.seconds,
+					'guidance': file.guidance,
 				});
 			});
 			
@@ -302,7 +305,7 @@ Released   : 20081103
 							for(let weight of weights) {
 								if (weight.fileName == file.fileName){
 									if (doValue == INF) doValue = 0;
-									doValue += (weight.weight * file.seconds);
+									doValue += (weight.weight * file.guidance);
 									
 									break;
 								}
@@ -332,7 +335,7 @@ Released   : 20081103
 						for(let weight of weights) {
 							if (weight.fileName == file.fileName) {
 								if (donotValue == INF) donotValue = 0;
-								donotValue += (weight.weight * file.seconds);
+								donotValue += (weight.weight * file.guidance);
 								
 								break;
 							}
@@ -367,9 +370,16 @@ Released   : 20081103
 			FinalOrder.sort((a, b) => {
 			
 				if (a.valueABS > b.valueABS) {
-					return -1;		
+				
+					if (guidanceType == "flexibility" || guidanceType == "customization")
+						return 1;
+					else
+						return -1;		
 				} else if (a.valueABS < b.valueABS) {
-					return 1;
+					if (guidanceType == "flexibility" || guidanceType == "customization")
+						return -1;
+					else
+						return 1;
 				}
 				
 				EnabledActivites.forEach((activity) => {
@@ -740,7 +750,10 @@ Released   : 20081103
 				<div class="post"> 
 					<h1 class="title"><a href="#">${modelName} (${countFeatures} variants)</a></h1>
 				</br></br>
-			<input class="selectedFeature" id="originatorName" type="text" value="Originator Name" size="17"/> &ensp;
+			<input class="selectedFeature" id="originatorName" type="text" value="Originator Name" onkeyup="checkOriginatorName()" size="17"/> &ensp; <br>
+			
+			<b id="historyBox" class="blackColor" style="display: none;"></b>
+								
 			</br></br>					 				
 
 <p><table width=820 border=0>
@@ -808,7 +821,7 @@ Released   : 20081103
 								
 								
 								
-					<table> 									<tr align=top><td align=center colspan=2><button class="standardHighlight1" type="button" onclick="loadXMLDoc()">Rapid Reco</button> <br> <p id="demo">Ready!</p></td><td align=center colspan=2><button class="standardHighlight1" type="button" onclick="loadXMLDocc()">Detailed Reco</button><br><p id="democ">Ready!</p></td><td align=center colspan=2><button class="standardHighlight1" type="button" onclick="loadXMLDoc()">Flexible Reco</button><br><p id="democ">Ready!</p></td></tr>
+					<table> 									<tr align=top><td id="detailsBtn" align="center" colspan="2"><button class="standardHighlight1" type="button" onclick="loadXMLDocc()">Detailed Reco</button><br><p id="democ">Ready!</p></td><td id="flexBtn" align="center" colspan="2"><button class="standardHighlight1" type="button" onclick="loadXMLDoc()">Flexible Reco</button><br><p id="democ">Ready!</p></td></tr>
 					
 					 </table>
 						    
@@ -845,6 +858,24 @@ Released   : 20081103
 	if (guidanceType == -1)
 		document.getElementsByClassName("guidanceBox")[0].style.display = "none";
 
+	console.log(guidanceType);
+	console.log(document.getElementById("detailsBtn").style.display);
+	
+	
+	if (guidanceType == "performance") {
+		document.getElementById("detailsBtn").style.display = "none";
+		document.getElementById("flexBtn").style.display = "none";
+	}
+	
+	if (guidanceType == "flexibility") {
+		document.getElementById("detailsBtn").style.display = "none";
+		document.getElementById("flexBtn").style.display = "block";
+	}
+
+	if (guidanceType == "customization") {
+		document.getElementById("detailsBtn").style.display = "block";
+		document.getElementById("flexBtn").style.display = "none";
+	}
  
 	function exportCSV() {
 	
@@ -854,6 +885,28 @@ Released   : 20081103
 			'/SPLOT/SplotConfigurationServlet?action=export_configuration_csv&originatorName=' + originatorName + '&recommendationType=' + guidanceType,
 			'_blank'
 		);
+	}
+	
+	function checkOriginatorName() {
+		var originatorName = document.getElementById('originatorName').value.trim() || '';
+		
+		if (originatorName == "") {
+			document.getElementById('historyBox').style.display = "none";
+		}else  {
+			document.getElementById('historyBox').style.display = "block";
+		}
+		
+		let innerH = originatorName + " your last config: \n";
+		
+		filesData.forEach((file) => {
+			let resource = file.data.resource;
+			console.log(resource);
+			if (resource == originatorName) {
+				innerH += file.optionName + " - " + file.optionSelected + "\n";
+			}
+		});
+		
+		document.getElementById('historyBox').innerHTML = innerH;
 	}
 	
  function loadXMLDoc() {
