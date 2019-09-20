@@ -52,6 +52,10 @@ public abstract class InteractiveConfigurationMainHandler2 extends FreeMarkerHan
 	protected abstract String getResourcePath();	
 	protected abstract String getFeatureTemplateFile();
 	
+	public static boolean isNumeric(String strNum) {
+	    return strNum.matches("-?\\d+(\\.\\d+)?");
+	}
+	
 	public void buildModel(HttpServletRequest request, HttpServletResponse response, Map templateModel) throws HandlerExecutionException {
 
         try {	        	
@@ -135,57 +139,32 @@ public abstract class InteractiveConfigurationMainHandler2 extends FreeMarkerHan
 			String guidanceType = request.getParameter("guidanceType");
 			templateModel.put("guidanceType", guidanceType);
 			
-			
-			if (guidanceType == "rapid") {
-				
-			}
-			
-			
 			// Handle guide xml files
 
 			String guideXmlFilesPath = "/home/khaled/Desktop/PHD/splot/splot-research/WebContent/datasets/" + guidanceType + "/" + modelName;
 			
-			System.out.println(guideXmlFilesPath );
 			
-			
-			
-	        try (Stream<Path> walk = Files.walk(Paths.get(guideXmlFilesPath))) {
-
-	        	List<String> result = walk.filter(Files::isRegularFile)
-						.map(x -> x.toString())
-						.collect(Collectors.toList());
-
-				result.forEach(System.out::println);
+			if (!isNumeric(guidanceType)) {
 				
-				templateModel.put("guideXmlFilesPath", new Gson().toJson(result));
+				System.out.println(guideXmlFilesPath);
 				
-				
-//				JSONParser jsonParser = new JSONParser();         
-//		        try (FileReader reader = new FileReader(guideXmlFilesPath + result))
-//		        {
-//		            //Read JSON file
-//		            Object obj = jsonParser.parse(reader);
-//		 
-//		            JSONArray employeeList = (JSONArray) obj;
-//		            System.out.println(employeeList);
-//		             
-//		            //Iterate over employee array
-//		            employeeList.forEach( emp -> parseEmployeeObject( (JSONObject) emp ) );
-//		 
-//		        } catch (FileNotFoundException e) {
-//		            e.printStackTrace();
-//		        } catch (IOException e) {
-//		            e.printStackTrace();
-//		        } catch (ParseException e) {
-//		            e.printStackTrace();
-//		        }
-		        
+		        try (Stream<Path> walk = Files.walk(Paths.get(guideXmlFilesPath))) {
+	
+		        	List<String> result = walk.filter(Files::isRegularFile)
+							.map(x -> x.toString())
+							.collect(Collectors.toList());
+	
+					result.forEach(System.out::println);
+					
+					templateModel.put("guideXmlFilesPath", new Gson().toJson(result));
 		        
 				
-			} catch (IOException e) {
-				e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}else {
+				templateModel.put("guideXmlFilesPath", " ");
 			}
-	        
 	        
 	        
 			

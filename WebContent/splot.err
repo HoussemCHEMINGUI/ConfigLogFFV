@@ -56,3 +56,4 @@
 2019-08-15 15:23:49: [user=F5F68B246B13890CC4DA36981F8C9A1A, handler=export_configuration_csv,message=Configuration engine must be created first]
 2019-08-15 15:23:49: [user=4865206A4FB50C38A8120660C572AA36, handler=export_configuration_csv,message=Configuration engine must be created first]
 2019-09-19 21:09:23: [user=9AE9BC5BF9D42A50DE715E92762A416E, handler=interactive_configuration_updates,message=Problem updating configuration]
+2019-09-20 15:29:23: [user=68E166EB2F34DBAD593A4D851AF74330, handler=interactive_configuration_main,message=Problems locating/acessing the feature model repository path]

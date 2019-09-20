@@ -56,6 +56,7 @@ public class InteractiveConfigurationExportConfigurationHandler extends FreeMark
     		templateModel.put("id", uniqueID);
         	templateModel.put("modelName", model.getName());
         	templateModel.put("originatorName", request.getParameter("originatorName"));
+        	templateModel.put("recommendationType", request.getParameter("recommendationType"));
 
 /*        	List features = new LinkedList();
         	for( FeatureTreeNode featureNode : model.getNodes() ) {

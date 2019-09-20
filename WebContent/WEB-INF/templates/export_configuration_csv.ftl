@@ -38,9 +38,9 @@
 
 
 <body>
-    <b><br/>ID, Model Name, Originator Name, Feature ID, Feature Name, Feature Type, Feature Value, Feature Decision Type, Feature Decision Step, TimeStamp</b>
+    <b><br/>ID, Model Name, Originator Name, Feature ID, Feature Name, Feature Type, Feature Value, Feature Decision Type, Feature Decision Step, TimeStamp, Recommendation Type</b>
 <textarea id="textbox"><#list features as feature> 
-${id}, ${modelName}, ${originatorName}, ${feature.id}, ${feature.name}, ${feature.type}, ${feature.value}, ${feature.decisionType}, ${feature.decisionStep}, ${feature.timeStamp}
+${id}, ${modelName}, ${originatorName}, ${feature.id}, ${feature.name}, ${feature.type}, ${feature.value}, ${feature.decisionType}, ${feature.decisionStep}, ${feature.timeStamp}, ${recommendationType}
 </#list></textarea>
 
 

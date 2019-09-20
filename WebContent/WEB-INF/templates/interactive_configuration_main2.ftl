@@ -81,8 +81,22 @@ Released   : 20081103
 	var FinalOrder = [];
 	var filesData = [];
 	var guidanceType = '${guidanceType}';
+	const INF = -1e9;
 	
-	var guideXmlFilesPath = JSON.parse('${guideXmlFilesPath}');
+	console.log(guidanceType);
+	
+	if (guidanceType != "-1") {
+	
+		var guideXmlFilesPath = JSON.parse('${guideXmlFilesPath}');
+		
+		guideXmlFilesPath.forEach((file) => {
+			let filePath = file.split('WebContent/')[1];
+			let fileName = filePath.split('/');
+			fileName = fileName[fileName.length-1];
+			loadXMLFile(filePath, fileName);
+		});
+	}
+	
 	
 	function xmlParser(xml, fileName) {
 		var x, i, xmlDoc, txt = "";
@@ -118,6 +132,8 @@ Released   : 20081103
 			'seconds': seconds,
 			'data': fileData,
 		});
+		
+		filesData.sort( (a, b) => (a.seconds < b.seconds) ? -1 : 1);
 	}
 	
 	 function loadXMLFile(path, fileName) {
@@ -130,12 +146,7 @@ Released   : 20081103
 	}
 	
 	
-	guideXmlFilesPath.forEach((file) => {
-		let filePath = file.split('WebContent/')[1];
-		let fileName = filePath.split('/');
-		fileName = fileName[fileName.length-1];
-		loadXMLFile(filePath, fileName);
-	});
+	
 	    
 	console.log(filesData);
 
@@ -178,56 +189,46 @@ Released   : 20081103
 				});
 			}
 		}
+		
+		// console.log('free: ');
+		let normalVariants = document.getElementsByClassName('normalFeature');
+		for(let item of normalVariants) {
+			let itemName = item.innerHTML.trim();
+			if (itemName.length == '')continue;
+			
+			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
+			
+			if (EnabledActivites.indexOf(itemName) == -1 && Partial.indexOf(itemName) == -1) {
+				EnabledActivites.push(itemName);
+			}
+			
+			Partial.forEach((item, index, object) => {
+				if (item.optionName == itemName){
+					object.splice(index, 1);
+				}
+			});
+			
+		}
+		
+		
 	}
 	
 	function reSortList() {
-		let newOrder = [];
-		let childrens = document.getElementById('_r_children').children;
-		
-		FinalOrder.forEach((item) => {
-		
-			for(let act of childrens) {
-				let inner = act.innerHTML;
-				
-				if (inner.indexOf(item.activity) != -1){
-				
-					let flag = false;
-					for(let pre of newOrder) {
-						if (pre.indexOf(item.activity) != -1) {
-							flag = true;
-							break;
-						}
-					}
-					
-					if (!flag) newOrder.push(inner);
-					break;
-				}
-			}
+		var parentNode = document.getElementById('_r_children');
+		var e = document.getElementById('_r_children').children;
+		[].slice.call(e).sort((a, b) => {
+			var xx = -INF;
+			var yy = -INF;
+			FinalOrder.forEach((item, idx) => {
+				if (a.innerHTML.indexOf(item.activity) != -1) xx = idx; 
+				if (b.innerHTML.indexOf(item.activity) != -1) yy = idx;
+			});
+			if (xx==yy)return 1;
+			return (xx < yy) ? -1 : 1;
+		}).forEach(function(val) {
+			parentNode.appendChild(val);
 		});
-		
-		Partial.forEach((item) => {
-			
-			for(let act of childrens) {
-				let inner = act.innerHTML;
-				
-				if (inner.indexOf(item.optionName) != -1){
-				
-					let flag = false;
-					for(let pre of newOrder) {
-						if (pre.indexOf(item.optionName) != -1) {
-							flag = true;
-							break;
-						}
-					}
-					
-					if (!flag) newOrder.push(inner);
-					break;
-				}
-			}
-		});
-		
-		document.getElementById('_r_children').innerHTML = newOrder;
-		
+		document.getElementById('_r_children').innerHTML = parentNode.innerHTML;
 	}
 	
 	function updateGuidance(operation, value){
@@ -237,12 +238,16 @@ Released   : 20081103
 		
 		// console.log(operation, value);
 		
+		document.body.style.cursor = 'wait';
+		
+		checkAutoChanges();
+		
 		if (operation == opTypeUndo) {
 			
-			checkAutoChanges();
-			
+			algoProcess();
 			return;
-		} 
+		}
+		
 		
 		let pureItem = (typeof value != 'number' ? value.split(":")[0] : value);
 		let optionSelected = (typeof value != 'number' ? value.split(":")[1] : 0);
@@ -257,11 +262,17 @@ Released   : 20081103
 		
 		if (EnabledActivites.indexOf(itemTitle) != -1)
 			EnabledActivites.splice(EnabledActivites.indexOf(itemTitle), 1);
-			
-		// Wait till features table updates (auto select and deselected done if existed!) then calc recommendation! 
+		
+		algoProcess();
+		
+	}
+	
+	function algoProcess() {
+	
+		// Wait till features tcheckAutoChangesable updates (auto select and deselected done if existed!) then calc recommendation! 
 		setTimeout(() => {
 		
-			checkAutoChanges();
+			document.body.style.cursor = 'default';			
 			
 			let weights = [];
 			filesData.forEach((file) => {
@@ -281,10 +292,6 @@ Released   : 20081103
 			console.log('Weights:'); console.log(weights);
 			
 			EnabledActivites.forEach((activity) => {
-			
-				const INF = -1e9;
-				
-				let betterChoise = { 'val': -INF, 'type': 'default'}
 				
 				// DO
 				let doValue = INF;
@@ -296,11 +303,6 @@ Released   : 20081103
 								if (weight.fileName == file.fileName){
 									if (doValue == INF) doValue = 0;
 									doValue += (weight.weight * file.seconds);
-									
-									if (betterChoise.val > file.seconds) {
-										betterChoise.val = file.seconds;
-										betterChoise.type = 'select';
-									}
 									
 									break;
 								}
@@ -314,7 +316,7 @@ Released   : 20081103
 				if (doValue == INF) doValue = 0;
 				
 				// DO NOT
-				let donotValue = 0;
+				let donotValue = INF;
 				
 				filesData.forEach((file) => {
 					var found = false;
@@ -329,12 +331,8 @@ Released   : 20081103
 					if (!found) {
 						for(let weight of weights) {
 							if (weight.fileName == file.fileName) {
+								if (donotValue == INF) donotValue = 0;
 								donotValue += (weight.weight * file.seconds);
-								
-								if (betterChoise.val > file.seconds) {
-									betterChoise.val = file.seconds;
-									betterChoise.type = 'deselect';
-								}
 								
 								break;
 							}
@@ -342,22 +340,50 @@ Released   : 20081103
 					}
 				});
 				
+				if (donotValue == INF) donotValue = 0;
+				
+				
+				let betterChoise = 'default';
+				
+				for (let item of filesData[0].data) {
+					if (item.optionName == activity) {
+						betterChoise = item.optionSelected;
+						break;
+					}
+				}
+				
+				
 				FinalOrderTmp.push({
 					'doValue': doValue,
 					'donotValue': donotValue,
 					'activity': activity,
 					'valueABS': Math.abs(doValue-donotValue),
-					'betterChoise': betterChoise.type, 
+					'betterChoise': betterChoise, 
 				});
 			});
 			FinalOrder = FinalOrderTmp;
 			
+		
+			FinalOrder.sort((a, b) => {
+			
+				if (a.valueABS > b.valueABS) {
+					return -1;		
+				} else if (a.valueABS < b.valueABS) {
+					return 1;
+				}
+				
+				EnabledActivites.forEach((activity) => {
+					if (activity == a.activity) return -1;
+					else if (activity == b.activity) return 1;
+				});
+			});
+			
+			console.log('final order: ');
 			console.log(FinalOrder);
 			console.log("-------\n");
-		
-			FinalOrder.sort((a, b) => (a.valueABS > b.valueABS) ? -1 : 1)
 			
-			// reSortList();
+			
+			reSortList();
 			
 			let orderList = '<ol type="1">';
 			FinalOrder.forEach(function(item){
@@ -368,6 +394,7 @@ Released   : 20081103
 			document.getElementById('recommendedOrder').innerHTML = orderList;
 			
 		}, 1000); // wait 1 second
+		
 	}
 	
 	
@@ -516,7 +543,8 @@ Released   : 20081103
 		}
 		
 		//console.log(value + " | " + operation + " | " + parameter);
-		updateGuidance(operation, value);
+		if (guidanceType != "-1") 
+			updateGuidance(operation, value);
 	
 	    var xhrArgs = {
             url: "/SPLOT/SplotConfigurationServlet?action=interactive_configuration_updates&op=" + operation + parameters,
@@ -806,28 +834,24 @@ Released   : 20081103
 
 <script>
 
-	var guidanceType = document.getElementById("guidanceType").innerText;
+	var guidanceTypeInner = document.getElementById("guidanceType").innerText.trim();
 	
-	guidanceType = (guidanceType == "-1" ? "No" : guidanceType);
-	guidanceType = guidanceType[0].toUpperCase() +  guidanceType.slice(1);
+	guidanceTypeInner = (guidanceType == "-1" ? "No" : guidanceTypeInner);
+	guidanceTypeInner = guidanceTypeInner[0].toUpperCase() +  guidanceTypeInner.slice(1);
 	 
-	document.getElementById("guidanceType").innerHTML = guidanceType;
+	document.getElementById("guidanceType").innerHTML = guidanceTypeInner;
 	
-	/*let recommendedOrder = '<ol type="1">';
-	recommendationList.forEach(function(item){
-		recommendedOrder += '<li>' + item.optionName + ' | ' + item.optionSelected + '</li>';
-	});
-	recommendedOrder += '</ol>';
 	
-	document.getElementById('recommendedOrder').innerHTML = recommendedOrder;*/
-	
+	if (guidanceType == -1)
+		document.getElementsByClassName("guidanceBox")[0].style.display = "none";
+
  
 	function exportCSV() {
 	
 		var originatorName = document.getElementById('originatorName').value || '';
 	
 		window.open(
-			'/SPLOT/SplotConfigurationServlet?action=export_configuration_csv&originatorName=' + originatorName,
+			'/SPLOT/SplotConfigurationServlet?action=export_configuration_csv&originatorName=' + originatorName + '&recommendationType=' + guidanceType,
 			'_blank'
 		);
 	}
