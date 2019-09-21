@@ -75,7 +75,7 @@ public class SelectWorkflowHandler extends FreeMarkerHandler {
 		        String serviceAction = request.getParameter("serviceAction");
 		        
 		        String sortBy = request.getParameter("sortby");
-		        String dirType=request.getParameter("dirType"); 
+		        String dirType=request.getParameter("dirType");
 
 		        List<Map<String,String>> modelList = listWorkflowSpecifications(getServlet().getServletContext().getRealPath("/")+ "extensions/parsed_workflows",getServlet().getServletContext().getRealPath("/")+ "extensions/imported_workflows", sortBy);                
 		      
@@ -89,6 +89,7 @@ public class SelectWorkflowHandler extends FreeMarkerHandler {
 		        templateModel.put("serviceAction", serviceAction != null ? serviceAction : "");
 		        templateModel.put("sortBy", sortBy == null ? "name" : sortBy);
 		        templateModel.put("dirType", dirType != null ? dirType : "");
+		        
 
 		}
 

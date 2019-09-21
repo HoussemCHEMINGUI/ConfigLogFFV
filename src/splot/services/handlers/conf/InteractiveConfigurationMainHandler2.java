@@ -6,11 +6,23 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import org.apache.tomcat.jni.File;
+import org.json.JSONArray;
+
+import com.google.gson.Gson;
+import com.sun.org.apache.xerces.internal.impl.xpath.regex.ParseException;
 
 import splar.core.fm.FeatureGroup;
 import splar.core.fm.FeatureTreeNode;
@@ -23,6 +35,11 @@ import splot.core.HandlerExecutionException;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 
+import java.util.Iterator;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 public abstract class InteractiveConfigurationMainHandler2 extends FreeMarkerHandler {
 
 	protected InteractiveConfigurationElementsProducer confElementProducer = null;
@@ -34,6 +51,10 @@ public abstract class InteractiveConfigurationMainHandler2 extends FreeMarkerHan
 	protected abstract ConfigurationEngine createConfigurationEngine(String modelLocatorString) throws HandlerExecutionException;
 	protected abstract String getResourcePath();	
 	protected abstract String getFeatureTemplateFile();
+	
+	public static boolean isNumeric(String strNum) {
+	    return strNum.matches("-?\\d+(\\.\\d+)?");
+	}
 	
 	public void buildModel(HttpServletRequest request, HttpServletResponse response, Map templateModel) throws HandlerExecutionException {
 
@@ -109,10 +130,45 @@ public abstract class InteractiveConfigurationMainHandler2 extends FreeMarkerHan
     		}	    			    		 
     		templateModel.put("features", featuresList);
     		
-    		templateModel.put("modelName", confEngine.getModel().getName());
+    		String modelName = confEngine.getModel().getName();
+    		templateModel.put("modelName", modelName);
         	templateModel.put("countFeatures", confEngine.getModel().countFeatures());
         	templateModel.put("countInstantiatedFeatures", confEngine.getModel().getInstantiatedNodes().size());
 			templateModel.put("done", confEngine.isDone());
+			
+			String guidanceType = request.getParameter("guidanceType");
+			templateModel.put("guidanceType", guidanceType);
+			
+			// Handle guide xml files
+
+			String guideXmlFilesPath = "/home/khaled/Desktop/PHD/splot/splot-research/WebContent/datasets/" + guidanceType + "/" + modelName;
+			
+			
+			if (!isNumeric(guidanceType)) {
+				
+				System.out.println(guideXmlFilesPath);
+				
+		        try (Stream<Path> walk = Files.walk(Paths.get(guideXmlFilesPath))) {
+	
+		        	List<String> result = walk.filter(Files::isRegularFile)
+							.map(x -> x.toString())
+							.collect(Collectors.toList());
+	
+					result.forEach(System.out::println);
+					
+					templateModel.put("guideXmlFilesPath", new Gson().toJson(result));
+		        
+				
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}else {
+				templateModel.put("guideXmlFilesPath", " ");
+			}
+	        
+	        
+			
+			
 			
 		} catch (HandlerExecutionException e1) {
 			throw e1;

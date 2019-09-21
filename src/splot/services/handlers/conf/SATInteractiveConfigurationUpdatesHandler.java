@@ -1,5 +1,6 @@
 package splot.services.handlers.conf;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.sun.corba.se.impl.orbutil.graph.Node;
+
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import splar.core.fm.FeatureGroup;
@@ -21,6 +24,7 @@ import splar.core.fm.GroupedFeature;
 import splar.core.fm.SolitaireFeature;
 import splar.core.fm.configuration.ConfigurationEngine;
 import splar.core.fm.configuration.ConfigurationStep;
+import splot.configlog.models.ConfigurationTrace;
 import splot.core.FreeMarkerHandler;
 import splot.core.HandlerExecutionException;
 
@@ -48,7 +52,6 @@ public class SATInteractiveConfigurationUpdatesHandler extends FreeMarkerHandler
 	        }
 			
 	        //Mod for having the timestamp
-        	
         	HttpSession session = request.getSession(true);        	
         	ConfigurationEngine confEngine = (ConfigurationEngine)session.getAttribute("conf_engine");	        		
     		
@@ -97,19 +100,12 @@ public class SATInteractiveConfigurationUpdatesHandler extends FreeMarkerHandler
         		}
         		
         		stepsToUpdateList = new LinkedList<ConfigurationStep>();
-        		stepsToUpdateList.add( confEngine.configure(decisionVar, decisionValue.equals("1") ? 1 : 0) );
+        		ConfigurationStep configurationStep= confEngine.configure(decisionVar, decisionValue.equals("1") ? 1 : 0); 
+        		stepsToUpdateList.add(configurationStep);
         		
-        		//MODIFY  changed for .....
-        		Set<FeatureTreeNode> lastDecisions = confEngine.getLastStep().getDecisions();
-        		Set<FeatureTreeNode> lastPropagations = confEngine.getLastStep().getPropagations();
+        		// CONFIGLOG: Added to keep track of the configuration actions
+        		this.saveTraceLog(session,confEngine,configurationStep, timeStamp);
         		
-        		//TESTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-        		Collection<FeatureTreeNode>modelNodes= confEngine.getModel().getNodes();
-        		for (FeatureTreeNode node: modelNodes) {
-        			if(node.isInstantiated() && (lastDecisions.contains(node)||lastPropagations.contains(node))) {
-        				node.setProperty("timeStamp", timeStamp);
-        			}
-        		}
  
         	}
     		/*********************************************************************
@@ -136,6 +132,11 @@ public class SATInteractiveConfigurationUpdatesHandler extends FreeMarkerHandler
         		
         		// toggle decision and grabs new steps
         		stepsToUpdateList = confEngine.toggleDecision(toggleFeature);
+        		
+        		// CONFIGLOG: Added to keep track of the configuration actions
+        		System.out.println("CONFIGLOG: toggle feature calling the log saver");
+        		//Only the first value because it is the step that was changed with the toggle action
+            	this.saveTraceLog(session,confEngine,stepsToUpdateList.get(0), timeStamp);
         		
         		templateModel.put("countUndoSteps", countUndoSteps);
         		
@@ -241,6 +242,47 @@ public class SATInteractiveConfigurationUpdatesHandler extends FreeMarkerHandler
 		}
 		return "error";
 	}	
+	
+	
+	private void saveTraceLog(HttpSession session, ConfigurationEngine confEngine, ConfigurationStep step, String timeStamp) {
+		/* Try to keep the trace from the session, if the list does not exist then it creates the list and save
+		 * it in the session. Then it adds a new ConfigurationTrace object into the list, and update the list into the 
+		 * session variable. This variable will be later checked to export the results in the handler that export the csv files. 
+		 * Author: Luisa 
+		 */     	
+
+		//Get the list of traces from  the session variable
+		List<ConfigurationTrace> listOfConfigTraces= (List<ConfigurationTrace>) session.getAttribute("configurationLogs");
+    	if (listOfConfigTraces == null) {
+    		// TO avoid null pointer exceptions
+    		listOfConfigTraces= new ArrayList<ConfigurationTrace> ();
+    	}
+    	
+    	//MODIFY  changed for keeping log for the ConfigLog project
+		Set<FeatureTreeNode> lastDecisions = step.getDecisions();
+		Set<FeatureTreeNode> lastPropagations = step.getPropagations();
+		Collection<FeatureTreeNode>modelNodes= confEngine.getModel().getNodes();
+		
+		for (FeatureTreeNode featureNode: modelNodes) {
+			if(featureNode.isInstantiated() && (lastDecisions.contains(featureNode)||lastPropagations.contains(featureNode)) ){
+				// For future information we add the timestamp to the feature
+				featureNode.setProperty("timeStamp", timeStamp);
+				
+				// A new configuration trace object is created to keep all info
+				ConfigurationTrace trace= new ConfigurationTrace(featureNode);
+				listOfConfigTraces.add(trace);
+				
+				System.out.println("CONFLOG: saving configuration trace  "+ trace);
+			}
+		}
+    	
+    	//Update the list of traces into the session to be able of recovering this variable in the handler that exports the content
+    	session.setAttribute("configurationLogs", listOfConfigTraces );
+    	
+    	System.out.println("CONFLOG: updating logs into session variable  ");
+    	
+    	
+	}
 }
 
 

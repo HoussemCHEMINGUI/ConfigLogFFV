@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+exit<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
 Design by Free CSS Templates
 http://www.freecsstemplates.org
@@ -28,32 +28,397 @@ Released   : 20081103
 <#if !hasError>
 
 <style type="text/css">
-  .hintBox {
-    margin-top: 0px;
-    color: #292929;
-    width: 880px;
-    border: 1px solid #BABABA;
-    background-color: white;
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-left: 10px;
-    margin-bottom: 1em;
-    -o-border-radius: 10px;
-    -moz-border-radius: 12px;
-    -webkit-border-radius: 10px;
-    -webkit-box-shadow: 0px 3px 7px #adadad;
-    border-radius: 10px;
-    -moz-box-sizing: border-box;
-    -opera-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    -khtml-box-sizing: border-box;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
+
+	.blackColor {
+		color: black;
+	}
+	
+	.guidanceBox {
+		padding: 7px;
+		border: 1px dashed #efdd51;
+		display: inline-block;
+		border-radius: 8px;
+		min-width: 200px;
+		font-size: 12px;
+	    font-weight: bold;
+	    color: green;
+	    text-align: left;
+	}
+
+	.hintBox {
+		margin-top: 0px;
+		color: #292929;
+		width: 880px;
+		border: 1px solid #BABABA;
+		background-color: white;
+		padding-left: 10px;
+		padding-right: 10px;
+		margin-left: 10px;
+		margin-bottom: 1em;
+		-o-border-radius: 10px;
+		-moz-border-radius: 12px;
+		-webkit-border-radius: 10px;
+		-webkit-box-shadow: 0px 3px 7px #adadad;
+		border-radius: 10px;
+		-moz-box-sizing: border-box;
+		-opera-sizing: border-box;
+		-webkit-box-sizing: border-box;
+		-khtml-box-sizing: border-box;
+		box-sizing: border-box;
+		overflow: hidden;
+	}
 </style>
+
+
+<!-- jQuery -->
+<script src="http://code.jquery.com/jquery-3.3.1.slim.js" integrity="sha256-fNXJFIlca05BIO2Y5zh1xrShK3ME+/lYZ0j+ChxX2DA=" crossorigin="anonymous"></script>
+
 
 <script type="text/javascript"> 
 
+	var Partial = [];
+	var EnabledActivites = [];
+	var FinalOrder = [];
+	var filesData = [];
+	var guidanceType = '${guidanceType}';
+	const INF = -1e9;
+	
+	console.log(guidanceType);
+	
+	if (guidanceType != "-1") {
+	
+		var guideXmlFilesPath = JSON.parse('${guideXmlFilesPath}');
+		
+		guideXmlFilesPath.forEach((file) => {
+			let filePath = file.split('WebContent/')[1];
+			let fileName = filePath.split('/');
+			fileName = fileName[fileName.length-1];
+			loadXMLFile(filePath, fileName);
+		});
+	}
+	
+	
+	function xmlParser(xml, fileName) {
+		var x, i, xmlDoc, txt = "";
+		xmlDoc = xml.responseXML;
+		x = xmlDoc.getElementsByTagName("Activity");
+		y = xmlDoc.getElementsByTagName("Resource");
+		var fileData = [];
+		for (i = 0; i< x.length; i++) {
+			let value = x[i].innerHTML;
+			let parts = value.split('-');
+			
+			let optionName = parts[0] || '';
+			let optionType = parts[1] || '';
+			let optionSelected = parts[2] || '';
+			let optionMode = parts[3] || '';
+			let resource = y[i].innerHTML; 
+			
+			if(optionSelected == '1') optionSelected = 'select';
+			else if(optionSelected == '0') optionSelected = 'deselect';
+			
+			fileData.push({
+				'optionName': optionName,
+				'optionType': optionType,
+				'optionSelected': optionSelected,
+				'optionMode': optionMode.toLowerCase(),
+				'resource': resource, 
+			});
+			
+			if (!EnabledActivites.includes(optionName))
+				EnabledActivites.push(optionName);
+		}
+		let guidance = fileName.split('guidance')[0].trim();
+		//console.log(EnabledActivites);
+		filesData.push({
+			'fileName': fileName,
+			'guidance': guidance,
+			'data': fileData,
+		});
+		
+		filesData.sort( (a, b) => (a.guidance < b.guidance) ? -1 : 1);
+	}
+	
+	 function loadXMLFile(path, fileName) {
+		var xmlhttp = new XMLHttpRequest();
+		xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200)xmlParser(this, fileName);
+		};
+		xmlhttp.open("GET", path, true);
+		xmlhttp.send();
+	}
+	
+	
+	
+	    
+	console.log(filesData);
+
+	function checkAutoChanges() {
+		
+		// console.log('deseleted: ');
+		let deselectedVariants = document.getElementsByClassName('deselectedFeature');
+		for(let item of deselectedVariants) {
+			let itemName = item.innerHTML.trim();
+			if (itemName.length == '')continue;
+			
+			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
+			
+			if (EnabledActivites.indexOf(itemName) != -1) {
+				
+				EnabledActivites.splice(EnabledActivites.indexOf(itemName), 1);
+				
+				Partial.push({
+					'optionName': itemName,
+					'optionSelected': 'deselect',
+				});
+			}
+		}
+		
+		// console.log('seleted: ');
+		let selectedVariants = document.getElementsByClassName('selectedFeature');
+		for(let item of selectedVariants) {
+			let itemName = item.innerHTML.trim();
+			if (itemName.length == '')continue;
+			
+			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
+			
+			if (EnabledActivites.indexOf(itemName) != -1) {
+				
+				EnabledActivites.splice(EnabledActivites.indexOf(itemName), 1);
+				
+				Partial.push({
+					'optionName': itemName,
+					'optionSelected': 'select',
+				});
+			}
+		}
+		
+		// console.log('free: ');
+		let normalVariants = document.getElementsByClassName('normalFeature');
+		for(let item of normalVariants) {
+			let itemName = item.innerHTML.trim();
+			if (itemName.length == '')continue;
+			
+			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
+			
+			if (EnabledActivites.indexOf(itemName) == -1 && Partial.indexOf(itemName) == -1) {
+				EnabledActivites.push(itemName);
+			}
+			
+			Partial.forEach((item, index, object) => {
+				if (item.optionName == itemName){
+					object.splice(index, 1);
+				}
+			});
+			
+		}
+		
+		
+	}
+	
+	function reSortList() {
+		var parentNode = document.getElementById('_r_children');
+		var e = document.getElementById('_r_children').children;
+		[].slice.call(e).sort((a, b) => {
+			var xx = -INF;
+			var yy = -INF;
+			FinalOrder.forEach((item, idx) => {
+				if (a.innerHTML.indexOf(item.activity) != -1) xx = idx; 
+				if (b.innerHTML.indexOf(item.activity) != -1) yy = idx;
+			});
+			if (xx==yy)return 1;
+			return (xx < yy) ? -1 : 1;
+		}).forEach(function(val) {
+			parentNode.appendChild(val);
+		});
+		document.getElementById('_r_children').innerHTML = parentNode.innerHTML;
+	}
+	
+	function updateGuidance(operation, value){
+		const opTypeConf = 'conf';
+		const opTypeToggle = 'toggle';
+		const opTypeUndo = 'undo';
+		
+		// console.log(operation, value);
+		
+		document.body.style.cursor = 'wait';
+		
+		checkAutoChanges();
+		
+		if (operation == opTypeUndo) {
+			
+			algoProcess();
+			return;
+		}
+		
+		
+		let pureItem = (typeof value != 'number' ? value.split(":")[0] : value);
+		let optionSelected = (typeof value != 'number' ? value.split(":")[1] : 0);
+		optionSelected = (optionSelected == 1 ? 'select' : 'deselect');
+		
+		let itemTitle = document.getElementById(pureItem + '_name').getAttribute('title');
+		
+		Partial.push({
+			'optionName': itemTitle,
+			'optionSelected': optionSelected,
+		});
+		
+		if (EnabledActivites.indexOf(itemTitle) != -1)
+			EnabledActivites.splice(EnabledActivites.indexOf(itemTitle), 1);
+		
+		algoProcess();
+		
+	}
+	
+	function algoProcess() {
+	
+		// Wait till features tcheckAutoChangesable updates (auto select and deselected done if existed!) then calc recommendation! 
+		setTimeout(() => {
+		
+			document.body.style.cursor = 'default';			
+			
+			let weights = [];
+			filesData.forEach((file) => {
+				
+				let interSection = getInterSection(file.data, Partial);
+				let weight = interSection/Partial.length;
+				
+				weights.push({
+					'fileName': file.fileName,
+					'weight': weight,
+					'guidance': file.guidance,
+				});
+			});
+			
+			
+			let FinalOrderTmp = [];
+			console.log('Weights:'); console.log(weights);
+			
+			EnabledActivites.forEach((activity) => {
+				
+				// DO
+				let doValue = INF;
+				
+				filesData.forEach((file) => {
+					for(let item of file.data) { 
+						if (item.optionName == activity && item.optionMode == 'manual') {
+							for(let weight of weights) {
+								if (weight.fileName == file.fileName){
+									if (doValue == INF) doValue = 0;
+									doValue += (weight.weight * file.guidance);
+									
+									break;
+								}
+							}
+							// console.log(file.fileName , ' | ' , activity, ' | do: ', doValue, ' | ' , item.optionSelected);
+							break;
+						}
+					}
+				});
+				
+				if (doValue == INF) doValue = 0;
+				
+				// DO NOT
+				let donotValue = INF;
+				
+				filesData.forEach((file) => {
+					var found = false;
+					for(let item of file.data) {
+						if (item.optionName == activity && item.optionMode == 'manual') {
+							// console.log(activity, ' | ' , file.fileName);
+							found = true;
+							break;
+						}
+					}
+					
+					if (!found) {
+						for(let weight of weights) {
+							if (weight.fileName == file.fileName) {
+								if (donotValue == INF) donotValue = 0;
+								donotValue += (weight.weight * file.guidance);
+								
+								break;
+							}
+						}
+					}
+				});
+				
+				if (donotValue == INF) donotValue = 0;
+				
+				
+				let betterChoise = 'default';
+				
+				for (let item of filesData[0].data) {
+					if (item.optionName == activity) {
+						betterChoise = item.optionSelected;
+						break;
+					}
+				}
+				
+				
+				FinalOrderTmp.push({
+					'doValue': doValue,
+					'donotValue': donotValue,
+					'activity': activity,
+					'valueABS': Math.abs(doValue-donotValue),
+					'betterChoise': betterChoise, 
+				});
+			});
+			FinalOrder = FinalOrderTmp;
+			
+		
+			FinalOrder.sort((a, b) => {
+			
+				if (a.valueABS > b.valueABS) {
+				
+					if (guidanceType == "flexibility" || guidanceType == "customization")
+						return 1;
+					else
+						return -1;		
+				} else if (a.valueABS < b.valueABS) {
+					if (guidanceType == "flexibility" || guidanceType == "customization")
+						return -1;
+					else
+						return 1;
+				}
+				
+				EnabledActivites.forEach((activity) => {
+					if (activity == a.activity) return -1;
+					else if (activity == b.activity) return 1;
+				});
+			});
+			
+			console.log('final order: ');
+			console.log(FinalOrder);
+			console.log("-------\n");
+			
+			
+			reSortList();
+			
+			let orderList = '<ol type="1">';
+			FinalOrder.forEach(function(item){
+				orderList += '<li style="color:gray;">' + item.activity + ' - <span style="color:' 
+					+  (item.betterChoise == 'select' ? 'green' : 'red') + ';">' + item.betterChoise + '</span></li>';
+			});
+			orderList += '</ol>';
+			document.getElementById('recommendedOrder').innerHTML = orderList;
+			
+		}, 1000); // wait 1 second
+		
+	}
+	
+	
+	function getInterSection(set1, set2){
+		let ret = 0;
+		set1.forEach((item1) => {
+			set2.forEach((item2) => {
+				ret += (item1.optionName == item2.optionName && item1.optionSelected == item2.optionSelected);
+			});
+		});
+		return ret;
+	}
+	
+	
 	dojo.require("dijit.form.Button");
 	dojo.require("dijit.Dialog");
 	dojo.require("dijit.ProgressBar");	
@@ -183,9 +548,13 @@ Released   : 20081103
 		parameters = '';
 		if (typeof parameter != 'undefined' && typeof value != 'undefined' ) {
 			var today = new Date();
-			var timeStamp = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+			var timeStamp = today.getUTCDate() +"/" + today.getUTCMonth() +"/" + today.getUTCFullYear() +" " + today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds() + ":" + today.getMilliseconds();   
 			parameters = '&' + parameter + '=' + value + '&'+'timeStamp='+timeStamp;
 		}
+		
+		//console.log(value + " | " + operation + " | " + parameter);
+		if (guidanceType != "-1") 
+			updateGuidance(operation, value);
 	
 	    var xhrArgs = {
             url: "/SPLOT/SplotConfigurationServlet?action=interactive_configuration_updates&op=" + operation + parameters,
@@ -263,6 +632,8 @@ Released   : 20081103
 						document.getElementById('configuration-done-element').style.display ='';				
 					}
 		     	}
+		     	
+		     	checkAutoChanges();
             },
             error: function(error) {
                 closeNotificationDialog();                
@@ -378,24 +749,24 @@ Released   : 20081103
 				
 				<div class="post"> 
 					<h1 class="title"><a href="#">${modelName} (${countFeatures} variants)</a></h1>
-</br></br> <center> 
-									<input class="selectedFeature" name="n1" id="para" onblur="myFunction()" type="text" value="Originator Name 1"  size="17"/>  &nbsp;&nbsp;
-											<input class="selectedFeature" name="n2" id="hj" onblur="myFunction()" type="text" value="Originator Name 2" size="17"/> &nbsp;&nbsp;
-										<input class="selectedFeature" name ="n3" id="hk" onblur="myFunction()" type="text" value="Originator Name 3" size="17"/> </br>
-		</center>
-			</br>								 				
-<script>
+				</br></br>
+			<input class="selectedFeature" id="originatorName" type="text" value="Originator Name" onkeyup="checkOriginatorName()" size="17"/> &ensp; <br>
+			
+			<b id="historyBox" class="blackColor" style="display: none;"></b>
+								
+			</br></br>					 				
 
-function myFunction() {
-var originatorName1;
-originatorName1 = document.getElementById('para').value;
-}
-</script>
 <p><table width=820 border=0>
 							<tr>
 							<td align=left valign=top>
 								<div id="fm">
 								</div>
+							</td>
+							<td align=center valign=top>
+								<span class="guidanceBox">
+									<b class="blackColor">Guidance type:</b> <span id="guidanceType">${guidanceType}</span><hr>
+									<b class="blackColor">recommended order:</b> <span id="recommendedOrder"></span><br>
+								</span>	
 							</td>
 							<td align=right valign=top>
 							<!--	
@@ -434,7 +805,7 @@ originatorName1 = document.getElementById('para').value;
 											<span style="display:block;" id="configuration-done-element">
 												<span class="standardHighlight1">Done!</span>
 												(Export configuration: 
-												<a target="_new" href="/SPLOT/SplotConfigurationServlet?action=export_configuration_csv" >CSV file</a> |  
+												<a href="#" onclick="exportCSV()" >CSV file</a> |  
 												<a target="_new" href="/SPLOT/SplotConfigurationServlet?action=export_configuration_xml">XML</a>)
 											</span>
 											<span style="display:block;" id="auto-completion-element">
@@ -443,42 +814,21 @@ originatorName1 = document.getElementById('para').value;
 												<a title="Attempts to DESELECT all remaining features" href="javascript:updateConfigurationElements('completion','precedence','false')">Less Features</a> | 
 												<a title="Attempts to SELECT all remaining features" href="javascript:updateConfigurationElements('completion','precedence','true')">More Features</a> 
 											</span>
-										</span>
+											
+															</span>
 									</td></tr>
 								</table>	
 								
 								
 								
+					<table> 									<tr align=top><td id="detailsBtn" align="center" colspan="2"><button class="standardHighlight1" type="button" onclick="loadXMLDocc()">Detailed Reco</button><br><p id="democ">Ready!</p></td><td id="flexBtn" align="center" colspan="2"><button class="standardHighlight1" type="button" onclick="loadXMLDoc()">Flexible Reco</button><br><p id="democ">Ready!</p></td></tr>
+					
+					 </table>
+						    
+						  
+															</td></tr>
 								
-								
-								
-								<table class="standardTableStyle" id="confStepsTable" width="419">
-									<tr><td colspan='5' class="standardHighlight1">
-										<b>Recommendation Series</b> 
-									</td></tr>
-									
-									<tr>
-										<th>Rec</th>
-										<th>Rec Variant</th>
-										<th>Rec Value</th>
-										<th>Rec Process</th>
-										<th>Why</th>
-									</tr>
-									
-									<tr><td>1</td>
-										
-									<td>12</td>	
-									<td>Accept var 12</td>	
-									<td>Vars : 12,17,19</td>	
-									<td>20 persons already choose that</td>	
-									</td></tr>
-								</table>	
-								
-								
-								
-								
-							</td>
-							</tr>
+							
 						</table></p>
 					</div> <!-- entry -->
 				</div> <!-- post -->
@@ -494,8 +844,122 @@ originatorName1 = document.getElementById('para').value;
     <p>Centre de Recherche en Informatique, Universite Pantheon Sorbonne Paris 1 / Laboratoire de Recherche RIADI, Universite de la Mannouba</p>
 </div> 
 <!-- end #footer --> 
+
+<script>
+
+	var guidanceTypeInner = document.getElementById("guidanceType").innerText.trim();
 	
-<script type="text/javascript">
+	guidanceTypeInner = (guidanceType == "-1" ? "No" : guidanceTypeInner);
+	guidanceTypeInner = guidanceTypeInner[0].toUpperCase() +  guidanceTypeInner.slice(1);
+	 
+	document.getElementById("guidanceType").innerHTML = guidanceTypeInner;
+	
+	
+	// No guidance
+	if (guidanceType == -1) {
+		document.getElementsByClassName("guidanceBox")[0].style.display = "none";
+		document.getElementById("originatorName").readOnly = true;
+	}
+	
+	if (guidanceType == "performance") {
+		document.getElementById("detailsBtn").style.display = "none";
+		document.getElementById("flexBtn").style.display = "none";
+		document.getElementById("originatorName").readOnly = true;
+	}
+	
+	if (guidanceType == "flexibility") {
+		document.getElementById("detailsBtn").style.display = "none";
+		document.getElementById("flexBtn").style.display = "block";
+		document.getElementById("originatorName").readOnly = true;
+	}
+
+	if (guidanceType == "customization") {
+		document.getElementById("detailsBtn").style.display = "block";
+		document.getElementById("flexBtn").style.display = "none";
+	}
+ 
+	function exportCSV() {
+	
+		var originatorName = document.getElementById('originatorName').value || '';
+	
+		window.open(
+			'/SPLOT/SplotConfigurationServlet?action=export_configuration_csv&originatorName=' + originatorName + '&recommendationType=' + guidanceType,
+			'_blank'
+		);
+	}
+	
+	function checkOriginatorName() {
+		var originatorName = document.getElementById('originatorName').value.trim() || '';
+		
+		if (originatorName == "") {
+			document.getElementById('historyBox').style.display = "none";
+		}else  {
+			document.getElementById('historyBox').style.display = "block";
+		}
+		
+		let innerH = originatorName + " your last config:<br>";
+		
+		filesData.forEach((file) => {
+			file.data.forEach((item) => {
+				let resource = item.resource;
+				console.log(resource);
+				if (resource == originatorName) {
+					innerH += item.optionName + " - " + item.optionSelected + "<br>";
+				}
+			});
+		});
+		
+		document.getElementById('historyBox').innerHTML = innerH;
+	}
+	
+ function loadXMLDoc() {
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			myFunction(this);
+		}
+	};
+	xmlhttp.open("GET", "Rapid.xml", true);
+	xmlhttp.send();
+}
+
+function myFunction(xml) {
+	var x, i, xmlDoc, txt;
+	xmlDoc = xml.responseXML;
+	txt = "";
+	x = xmlDoc.getElementsByTagName("Node");
+	for (i = 0; i< x.length; i++) {
+		txt += x[i].getAttribute('activity') + "<br>";
+	}
+	document.getElementById("demo").innerHTML = txt;
+}
+
+
+
+function loadXMLDocc() {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      myFunction1(this);
+    }
+  };
+  xmlhttp.open("GET", "detailed.xml", true);
+  xmlhttp.send();
+}
+
+function myFunction1(xml) {
+  var x, i, xmlDoc, txt;
+  xmlDoc = xml.responseXML;
+  txt = "";
+  x = xmlDoc.getElementsByTagName("Activity");
+  for (i = 0; i< x.length; i++) {
+    txt += x[i].childNodes[0].nodeValue + "<br>";
+  }
+  document.getElementById("democ").innerHTML = txt;
+}
+
+
+
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
 document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
 </script>
@@ -506,5 +970,7 @@ pageTracker._trackPageview();
 } catch(err) {}
 
 </script>
+
+
 </body>
 </html>
