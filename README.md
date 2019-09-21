@@ -1,5 +1,5 @@
 # ConfiLog
-Product Line Configuration Meets Process Mining(PhD publication du Université de Paris 1 Panthéon-Sorbonne), That shows how process mining can resolve configuration difficulties.<br>
+Product Line Configuration Meets Process Mining (PhD publication - Université de Paris 1 Panthéon-Sorbonne), That shows how process mining can resolve configuration difficulties.<br>
 My role: implement the recommendation algorithm using Java(J2EE), Tomcat and JavaScript.
 
 ### Run
