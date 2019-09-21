@@ -855,21 +855,22 @@ Released   : 20081103
 	document.getElementById("guidanceType").innerHTML = guidanceTypeInner;
 	
 	
-	if (guidanceType == -1)
+	// No guidance
+	if (guidanceType == -1) {
 		document.getElementsByClassName("guidanceBox")[0].style.display = "none";
-
-	console.log(guidanceType);
-	console.log(document.getElementById("detailsBtn").style.display);
-	
+		document.getElementById("originatorName").readOnly = true;
+	}
 	
 	if (guidanceType == "performance") {
 		document.getElementById("detailsBtn").style.display = "none";
 		document.getElementById("flexBtn").style.display = "none";
+		document.getElementById("originatorName").readOnly = true;
 	}
 	
 	if (guidanceType == "flexibility") {
 		document.getElementById("detailsBtn").style.display = "none";
 		document.getElementById("flexBtn").style.display = "block";
+		document.getElementById("originatorName").readOnly = true;
 	}
 
 	if (guidanceType == "customization") {
@@ -896,14 +897,16 @@ Released   : 20081103
 			document.getElementById('historyBox').style.display = "block";
 		}
 		
-		let innerH = originatorName + " your last config: \n";
+		let innerH = originatorName + " your last config:<br>";
 		
 		filesData.forEach((file) => {
-			let resource = file.data.resource;
-			console.log(resource);
-			if (resource == originatorName) {
-				innerH += file.optionName + " - " + file.optionSelected + "\n";
-			}
+			file.data.forEach((item) => {
+				let resource = item.resource;
+				console.log(resource);
+				if (resource == originatorName) {
+					innerH += item.optionName + " - " + item.optionSelected + "<br>";
+				}
+			});
 		});
 		
 		document.getElementById('historyBox').innerHTML = innerH;
