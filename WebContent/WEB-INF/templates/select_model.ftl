@@ -10,6 +10,9 @@
 	</style>
 	
 	<script type="text/javascript">
+	
+	<!-- Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com) -->
+	
 	<!--
 	 function sortModels(sortBy)
 	{

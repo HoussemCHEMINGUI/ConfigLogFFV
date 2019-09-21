@@ -9,6 +9,9 @@ Description: A two-column, fixed-width design with dark color scheme.
 Version    : 1.0
 Released   : 20081103
 
+
+Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
+
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -83,8 +86,6 @@ Released   : 20081103
 	var guidanceType = '${guidanceType}';
 	const INF = -1e9;
 	
-	console.log(guidanceType);
-	
 	if (guidanceType != "-1") {
 	
 		var guideXmlFilesPath = JSON.parse('${guideXmlFilesPath}');
@@ -95,6 +96,9 @@ Released   : 20081103
 			fileName = fileName[fileName.length-1];
 			loadXMLFile(filePath, fileName);
 		});
+		
+		console.log('xml files data:');
+		console.log(filesData);
 	}
 	
 	
@@ -129,7 +133,7 @@ Released   : 20081103
 				EnabledActivites.push(optionName);
 		}
 		let guidance = fileName.split('guidance')[0].trim();
-		//console.log(EnabledActivites);
+		
 		filesData.push({
 			'fileName': fileName,
 			'guidance': guidance,
@@ -148,20 +152,13 @@ Released   : 20081103
 		xmlhttp.send();
 	}
 	
-	
-	
-	    
-	console.log(filesData);
 
 	function checkAutoChanges() {
 		
-		// console.log('deseleted: ');
 		let deselectedVariants = document.getElementsByClassName('deselectedFeature');
 		for(let item of deselectedVariants) {
 			let itemName = item.innerHTML.trim();
 			if (itemName.length == '')continue;
-			
-			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
 			
 			if (EnabledActivites.indexOf(itemName) != -1) {
 				
@@ -174,13 +171,10 @@ Released   : 20081103
 			}
 		}
 		
-		// console.log('seleted: ');
 		let selectedVariants = document.getElementsByClassName('selectedFeature');
 		for(let item of selectedVariants) {
 			let itemName = item.innerHTML.trim();
 			if (itemName.length == '')continue;
-			
-			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
 			
 			if (EnabledActivites.indexOf(itemName) != -1) {
 				
@@ -193,13 +187,10 @@ Released   : 20081103
 			}
 		}
 		
-		// console.log('free: ');
 		let normalVariants = document.getElementsByClassName('normalFeature');
 		for(let item of normalVariants) {
 			let itemName = item.innerHTML.trim();
 			if (itemName.length == '')continue;
-			
-			// console.log(itemName, ' | ' , EnabledActivites.indexOf(itemName));
 			
 			if (EnabledActivites.indexOf(itemName) == -1 && Partial.indexOf(itemName) == -1) {
 				EnabledActivites.push(itemName);
@@ -238,8 +229,6 @@ Released   : 20081103
 		const opTypeConf = 'conf';
 		const opTypeToggle = 'toggle';
 		const opTypeUndo = 'undo';
-		
-		// console.log(operation, value);
 		
 		document.body.style.cursor = 'wait';
 		
@@ -310,7 +299,6 @@ Released   : 20081103
 									break;
 								}
 							}
-							// console.log(file.fileName , ' | ' , activity, ' | do: ', doValue, ' | ' , item.optionSelected);
 							break;
 						}
 					}
@@ -325,7 +313,6 @@ Released   : 20081103
 					var found = false;
 					for(let item of file.data) {
 						if (item.optionName == activity && item.optionMode == 'manual') {
-							// console.log(activity, ' | ' , file.fileName);
 							found = true;
 							break;
 						}
@@ -552,7 +539,7 @@ Released   : 20081103
 			parameters = '&' + parameter + '=' + value + '&'+'timeStamp='+timeStamp;
 		}
 		
-		//console.log(value + " | " + operation + " | " + parameter);
+		// IMPORTANT UPDATE
 		if (guidanceType != "-1") 
 			updateGuidance(operation, value);
 	
@@ -902,7 +889,6 @@ Released   : 20081103
 		filesData.forEach((file) => {
 			file.data.forEach((item) => {
 				let resource = item.resource;
-				console.log(resource);
 				if (resource == originatorName) {
 					innerH += item.optionName + " - " + item.optionSelected + "<br>";
 				}
