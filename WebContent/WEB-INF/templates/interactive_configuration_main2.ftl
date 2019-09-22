@@ -207,6 +207,21 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 		
 	}
 	
+	function DFS(text, object){
+	
+		if(object == null) return;
+		
+		if (object.innerHTML.indexOf(text) != -1) return true;
+		
+		if(object.children == null) return;
+		
+		for(let inner of object.children)  DFS(inner);
+		
+		if(object.childNodes ==  null) return;
+			
+		for(let inner of object.children) DFS(inner);
+	}
+	
 	function reSortList() {
 		var parentNode = document.getElementById('_r_children');
 		var e = document.getElementById('_r_children').children;
@@ -214,9 +229,12 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 			var xx = -INF;
 			var yy = -INF;
 			FinalOrder.forEach((item, idx) => {
-				if (a.innerHTML.indexOf(item.activity) != -1) xx = idx; 
-				if (b.innerHTML.indexOf(item.activity) != -1) yy = idx;
+			
+				if (DFS(item.activity, a) == true && xx == -INF) xx = idx;
+				if (DFS(item.activity, b) == true && yy == -INF) yy = idx;
+				
 			});
+			
 			if (xx==yy)return 1;
 			return (xx < yy) ? -1 : 1;
 		}).forEach(function(val) {
