@@ -1,6 +1,6 @@
 # ConfiLog
-Product Line Configurations guided by Process Traces,<br>
-How process mining can resolve configuration difficulties : An overview of the ConfiLog approach.
+Product Line Configuration Meets Process Mining (PhD publication - Université de Paris 1 Panthéon-Sorbonne), That shows how process mining can resolve configuration difficulties.<br>
+My role: implement the recommendation algorithm using Java(J2EE), Tomcat and JavaScript.
 
 ### Run
 change paths of project in `web.xml` file: `WebContent/WEB-INF/web.xml`<br>
