@@ -219,7 +219,7 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 		
 		if(object.childNodes ==  null) return;
 			
-		for(let inner of object.children) DFS(inner);
+		for(let inner of object.childNodes) DFS(inner);
 	}
 	
 	function reSortList() {
