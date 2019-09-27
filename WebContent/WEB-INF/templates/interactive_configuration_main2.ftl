@@ -1,4 +1,4 @@
-exit<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <!--
 Design by Free CSS Templates
 http://www.freecsstemplates.org
@@ -41,7 +41,7 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 		border: 1px dashed #efdd51;
 		display: inline-block;
 		border-radius: 8px;
-		min-width: 200px;
+		min-width: 60%;
 		font-size: 12px;
 	    font-weight: bold;
 	    color: green;
@@ -72,11 +72,6 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 	}
 </style>
 
-
-<!-- jQuery -->
-<script src="http://code.jquery.com/jquery-3.3.1.slim.js" integrity="sha256-fNXJFIlca05BIO2Y5zh1xrShK3ME+/lYZ0j+ChxX2DA=" crossorigin="anonymous"></script>
-
-
 <script type="text/javascript"> 
 
 	var Partial = [];
@@ -87,8 +82,13 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 	const INF = -1e9;
 	
 	if (guidanceType != "-1") {
-	
-		var guideXmlFilesPath = JSON.parse('${guideXmlFilesPath}');
+		
+		let paths = '${guideXmlFilesPath}';
+		
+		while(paths.indexOf('\\') != -1)
+		paths = paths.replace('\\', '\/');
+		
+		var guideXmlFilesPath = JSON.parse(paths);
 		
 		guideXmlFilesPath.forEach((file) => {
 			let filePath = file.split('WebContent/')[1];
@@ -492,7 +492,7 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 	*  Reset configuration
 	*******************************************************/
 	function resetConfiguration() {
-	   window.location = "/SPLOT/SplotConfigurationServlet?action=interactive_configuration_main&op=reset";
+	   window.location = "/SPLOT/SplotConfigurationServlet?action=interactive_configuration_main&op=reset&guidanceType=" + guidanceType;
 	}
 	
 	/******************************************************
@@ -767,13 +767,12 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 								<div id="fm">
 								</div>
 							</td>
-							<td align=center valign=top>
+							<td align=right valign=top>
 								<span class="guidanceBox">
 									<b class="blackColor">Guidance type:</b> <span id="guidanceType">${guidanceType}</span><hr>
 									<b class="blackColor">recommended order:</b> <span id="recommendedOrder"></span><br>
 								</span>	
-							</td>
-							<td align=right valign=top>
+								
 							<!--	
 								<span>
 									<p><b>Legend</b>:
@@ -852,35 +851,40 @@ Recommendation Algorithm implemented by: Khaled Alam (khaledalam.net@gmail.com)
 
 <script>
 
-	var guidanceTypeInner = document.getElementById("guidanceType").innerText.trim();
+	var guidanceTypeInner = "";
 	
-	guidanceTypeInner = (guidanceType == "-1" ? "No" : guidanceTypeInner);
-	guidanceTypeInner = guidanceTypeInner[0].toUpperCase() +  guidanceTypeInner.slice(1);
-	 
-	document.getElementById("guidanceType").innerHTML = guidanceTypeInner;
-	
-	
-	// No guidance
-	if (guidanceType == -1) {
-		document.getElementsByClassName("guidanceBox")[0].style.display = "none";
-		document.getElementById("originatorName").readOnly = true;
-	}
-	
-	if (guidanceType == "performance") {
-		document.getElementById("detailsBtn").style.display = "none";
-		document.getElementById("flexBtn").style.display = "none";
-		document.getElementById("originatorName").readOnly = true;
-	}
-	
-	if (guidanceType == "flexibility") {
-		document.getElementById("detailsBtn").style.display = "none";
-		document.getElementById("flexBtn").style.display = "block";
-		document.getElementById("originatorName").readOnly = true;
-	}
+	if(document.getElementById("guidanceType")) {
 
-	if (guidanceType == "customization") {
-		document.getElementById("detailsBtn").style.display = "block";
-		document.getElementById("flexBtn").style.display = "none";
+		guidanceTypeInner = document.getElementById("guidanceType").innerText.trim();
+	
+		guidanceTypeInner = (guidanceType == "-1" ? "No" : guidanceTypeInner);
+		guidanceTypeInner = guidanceTypeInner[0].toUpperCase() +  guidanceTypeInner.slice(1);
+		
+		document.getElementById("guidanceType").innerHTML = guidanceTypeInner;
+	
+	
+		// No guidance
+		if (guidanceType == -1) {
+			document.getElementsByClassName("guidanceBox")[0].style.display = "none";
+			document.getElementById("originatorName").readOnly = true;
+		}
+		
+		if (guidanceType == "performance") {
+			document.getElementById("detailsBtn").style.display = "none";
+			document.getElementById("flexBtn").style.display = "none";
+			document.getElementById("originatorName").readOnly = true;
+		}
+		
+		if (guidanceType == "flexibility") {
+			document.getElementById("detailsBtn").style.display = "none";
+			document.getElementById("flexBtn").style.display = "block";
+			document.getElementById("originatorName").readOnly = true;
+		}
+	
+		if (guidanceType == "customization") {
+			document.getElementById("detailsBtn").style.display = "block";
+			document.getElementById("flexBtn").style.display = "none";
+		}
 	}
  
 	function exportCSV() {
